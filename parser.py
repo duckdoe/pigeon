@@ -34,7 +34,7 @@ class Parser:
     def __parse_comparison_expr(self) -> asts.Expr:
         left = self.__parse_additve_expr()
 
-        while self.__cur_token().value in (">", "<"):
+        while self.__cur_token().value in (">", "<", "==", "<=", ">="):
             operator = self.__eat_token().value
 
             right = self.__parse_additve_expr()
@@ -85,9 +85,22 @@ class Parser:
                 return asts.StringLiteral("StringLiteral", token.value)
             case TokenType.Number:
                 return asts.NumericLiteral("NumericLiteral", float(token.value))
+            
+            case TokenType.Lparen:
+                value = self.__parse_expr()
+
+                if self.__cur_token().type != TokenType.Rparen:
+                    raise Exception(f"Syntax Error got {self.__cur_token()}")
+                
+                self.__eat_token()
+                return value
+            case TokenType.Bool:
+                return asts.BooleanLiteral("BooleanLiteral", token.value)
+            case TokenType.Null:
+                return asts.NullLiteral("NullLiteral", token.value)
             case _:
                 raise Exception(f"Syntax Error {token}")
 
 
-parser = Parser(tokenize("2 + 2 < 3"))
+parser = Parser(tokenize("fortune <= 2 + 2"))
 print(parser.generate_ast())

@@ -1,5 +1,6 @@
-from tokens import Token, TokenType
 from typing import List
+
+from tokens import Token, TokenType, keywords
 
 
 class Lexer:
@@ -40,8 +41,22 @@ class Lexer:
             case "+":
                 token = Token(TokenType.BinOp, self.char)
             case ">":
+                if self.pos < len(self.input) - 1 and self.input[self.pos + 1] == '=':
+                    self.__advance() # "moves to the second equals"
+                    token = Token(TokenType.BinOp, '<=')
+
+                    self.__advance() # leaves the '='
+                    return token
+                
                 token = Token(TokenType.BinOp, self.char)
             case "<":
+                if self.pos < len(self.input) - 1 and self.input[self.pos + 1] == '=':
+                    self.__advance() # "moves to the second equals"
+                    token = Token(TokenType.BinOp, '>=')
+
+                    self.__advance() # leaves the second '='
+                    return token
+                
                 token = Token(TokenType.BinOp, self.char)
             case "!":
                 token = Token(TokenType.Bang, self.char)
@@ -52,9 +67,23 @@ class Lexer:
             case '"' | "'":
                 literal = self.__make_string(self.char)
                 token = Token(TokenType.String, literal)
+            case "=":
+                if self.pos < len(self.input) - 1 and self.input[self.pos + 1] == '=':
+                    self.__advance() # "moves to the second equals"
+                    token = Token(TokenType.Equals, '==')
+
+                    self.__advance() # leaves the second '='
+                    return token
+
+                token = Token(TokenType.Assign, self.char)
             case _:
                 if is_letter(self.char):
-                    return Token(TokenType.Ident, self.__make_ident())
+                    literal = self.__make_ident()
+
+                    if literal in keywords:
+                        return Token(keywords[literal], literal)
+
+                    return Token(TokenType.Ident, literal)
                 elif is_number(self.char):
                     return Token(TokenType.Number, self.__make_number())
 
@@ -111,6 +140,7 @@ def is_number(char: str) -> bool:
         return False
 
     return char >= "0" and char <= "9"
+
 
 def tokenize(input: str) -> List[Token]:
     lexer = Lexer(input)

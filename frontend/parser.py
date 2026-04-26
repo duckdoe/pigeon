@@ -1,8 +1,7 @@
 from typing import List
 
-import asts
-from lexer import tokenize
-from tokens import Token, TokenType
+from . import asts
+from .tokens import Token, TokenType
 
 
 class Parser:
@@ -10,11 +9,11 @@ class Parser:
         self.tokens = tokens
         self.__body = []
 
-    def generate_ast(self) -> List[asts.Stmt]:
+    def generate_ast(self) -> asts.Program:
         while self.__not_eof():
             self.__body.append(self.__parse_stmt())
 
-        return self.__body
+        return asts.Program("Program", self.__body)
 
     def __not_eof(self):
         return self.__cur_token().type != TokenType.Eof
@@ -58,7 +57,7 @@ class Parser:
     def __parse_multiplicitive_expr(self) -> asts.Expr:
         left = self.__parse_unary_expr()
 
-        while self.__cur_token().value in ("/", "*"):
+        while self.__cur_token().value in ("/", "*", "%"):
             operator = self.__eat_token().value
 
             right = self.__parse_unary_expr()
@@ -85,13 +84,13 @@ class Parser:
                 return asts.StringLiteral("StringLiteral", token.value)
             case TokenType.Number:
                 return asts.NumericLiteral("NumericLiteral", float(token.value))
-            
+
             case TokenType.Lparen:
                 value = self.__parse_expr()
 
                 if self.__cur_token().type != TokenType.Rparen:
                     raise Exception(f"Syntax Error got {self.__cur_token()}")
-                
+
                 self.__eat_token()
                 return value
             case TokenType.Bool:
@@ -100,7 +99,3 @@ class Parser:
                 return asts.NullLiteral("NullLiteral", token.value)
             case _:
                 raise Exception(f"Syntax Error {token}")
-
-
-parser = Parser(tokenize("fortune <= 2 + 2"))
-print(parser.generate_ast())

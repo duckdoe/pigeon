@@ -1,6 +1,6 @@
 from typing import List
 
-from tokens import Token, TokenType, keywords
+from .tokens import Token, TokenType, keywords
 
 
 class Lexer:
@@ -39,6 +39,8 @@ class Lexer:
             case "/":
                 token = Token(TokenType.BinOp, self.char)
             case "+":
+                token = Token(TokenType.BinOp, self.char)
+            case '%':
                 token = Token(TokenType.BinOp, self.char)
             case ">":
                 if self.pos < len(self.input) - 1 and self.input[self.pos + 1] == '=':

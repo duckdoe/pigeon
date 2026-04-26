@@ -45,7 +45,7 @@ class Lexer:
             case ">":
                 if self.pos < len(self.input) - 1 and self.input[self.pos + 1] == '=':
                     self.__advance() # "moves to the second equals"
-                    token = Token(TokenType.BinOp, '<=')
+                    token = Token(TokenType.BinOp, '>=')
 
                     self.__advance() # leaves the '='
                     return token
@@ -54,7 +54,7 @@ class Lexer:
             case "<":
                 if self.pos < len(self.input) - 1 and self.input[self.pos + 1] == '=':
                     self.__advance() # "moves to the second equals"
-                    token = Token(TokenType.BinOp, '>=')
+                    token = Token(TokenType.BinOp, '<=')
 
                     self.__advance() # leaves the second '='
                     return token

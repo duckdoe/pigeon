@@ -1,4 +1,4 @@
-from frontend.asts import BinaryExpr, Program, Stmt
+from frontend.asts import BinaryExpr, Program, Stmt, UnaryExpr
 
 from .values import Boolean, Null, Number, RuntimeValue, String
 
@@ -22,16 +22,50 @@ class Intpereter:
         left = self.__evaluate_node(node.left)
         right = self.__evaluate_node(node.right)
 
-        if left.type == "number" and right.type == "number":
+        if (
+            left.type == "number"
+            and right.type == "number"
+            and node.operator in ("-", "*", "+", "/", "%")
+        ):
             return self.__eval_arithmetic(left, right, node.operator)
+        elif (
+            left.type == "number"
+            and right.type == "number"
+            and node.operator in (">", "<", ">=", "<=")
+        ):
+            return self.__eval_arithmetic_comparison(left, right, node.operator)
+        elif node.operator == "==":
+            return self.__eval_comparison_expr(left, right)
 
         raise Exception(
             f"TypeError, cannot perform '{node.operator}' on type '{left.type}' and '{right.type}'"
         )
 
+    def __eval_comparison_expr(self, left, right) -> Boolean:
+        booleans = ["false", "true"]
+        result = int(left.type == right.type and left.value == right.value)
+
+        return Boolean("boolean", booleans[result])
+
+    def __eval_arithmetic_comparison(
+        self, left: RuntimeValue, right: RuntimeValue, operator: str
+    ) -> Boolean:
+        booleans = ["false", "true"]
+
+        if operator == ">":
+            result = booleans[int(left.value > right.value)]  # type: ignore
+        elif operator == "<":
+            result = booleans[int(left.value < right.value)]  # type: ignore
+        elif operator == ">=":
+            result = booleans[int(left.value >= right.value)]  # type: ignore
+        else:
+            result = booleans[int(left.value <= right.value)]  # type: ignore
+
+        return Boolean("boolean", result)
+
     def __eval_arithmetic(
         self, left: RuntimeValue, right: RuntimeValue, operator: str
-    ) -> RuntimeValue:
+    ) -> Number:
         if operator == "+":
             result = left.value + right.value  # type: ignore
         elif operator == "-":
@@ -44,6 +78,22 @@ class Intpereter:
             result = left.value % right.value  # type: ignore
 
         return Number("number", result)
+
+    def __eval_unary_expr(self, node: UnaryExpr):
+        operator = node.operator
+        value = self.__evaluate_node(node.value)
+        booleans = ["true", "false"]
+
+        if operator == "-" and value.type == "number":
+            return Number("number", value.value * -1)  # type: ignore
+        elif operator == "+" and value.type == "number":
+            return Number("number", value.value * 1)  # type: ignore
+        elif operator == "!" and value.type == "boolean":
+            return Boolean("boolean", booleans[booleans.index(value.value) - 1])  # type: ignore
+
+        raise Exception(
+            f"Type Error: Cannot perform '{operator}' on type '{value.type}'"
+        )
 
     def __evaluate_node(self, node: Stmt) -> RuntimeValue:
         match node.kind:
@@ -59,5 +109,7 @@ class Intpereter:
                 return String("string", node.value)  # type: ignore
             case "BinExpr":
                 return self.__eval_binary_expr(node)  # type: ignore
+            case "UnaryExpr":
+                return self.__eval_unary_expr(node)  # type: ignore
             case _:
                 raise Exception(f"Unexpected Error while evaluating {node}")

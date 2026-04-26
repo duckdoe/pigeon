@@ -133,6 +133,12 @@ class Intpereter:
         env = env.resolve(node.symbol)
         return env.look_up_var(node.symbol)
 
+    def __eval_var_declaration(self, node, env: Environment) -> Null:
+        value = self.__evaluate_node(node.value, env)
+        env.declare_var(node.symbol, value)
+
+        return Null("null")
+
     def __evaluate_node(self, node: Stmt, env: Environment) -> RuntimeValue:
         match node.kind:
             case "Program":
@@ -151,5 +157,7 @@ class Intpereter:
                 return self.__eval_unary_expr(node, env)  # type: ignore
             case "Identifier":
                 return self.__eval_identifier(node, env)  # type: ignore
+            case "VarDeclaration":
+                return self.__eval_var_declaration(node, env)
             case _:
                 raise Exception(f"Unexpected Error while evaluating {node}")

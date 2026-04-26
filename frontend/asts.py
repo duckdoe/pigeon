@@ -10,6 +10,7 @@ NodeType = Literal[
     "Program",
     "BooleanLiteral",
     "NullLiteral",
+    "VarDeclaration",
 ]
 
 
@@ -26,6 +27,18 @@ class Expr(Stmt):
 @dataclass
 class Program(Stmt):
     body: List[Stmt]
+
+
+@dataclass
+class VarDeclaration(Stmt):
+    symbol: str
+    value: Expr
+    is_constant: bool
+
+@dataclass
+class AssignmentExpr(Expr):
+    symbol: str
+    value: Expr
 
 
 @dataclass

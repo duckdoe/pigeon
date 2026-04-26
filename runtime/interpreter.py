@@ -36,10 +36,43 @@ class Intpereter:
             return self.__eval_arithmetic_comparison(left, right, node.operator)
         elif node.operator == "==":
             return self.__eval_comparison_expr(left, right)
+        elif node.operator == "and":
+            return self.__eval_short_circuit_and_expr(left, right)
+        elif node.operator == "or":
+            return self.__eval_short_circuit_or_expr(left, right)
 
         raise Exception(
             f"TypeError, cannot perform '{node.operator}' on type '{left.type}' and '{right.type}'"
         )
+
+    def __eval_short_circuit_and_expr(self, left, right) -> Boolean:
+        if left.type != "boolean" or right.type != "boolean":
+            raise Exception("Can only perform 'and' operations on boolean values")
+
+        result = int(
+            left.value == "true"
+            and left.type == "boolean"
+            and right.value == "true"
+            and right.type == "boolean"
+        )
+        booleans = ["false", "true"]
+        return Boolean("boolean", booleans[result])
+
+    def __eval_short_circuit_or_expr(self, left, right) -> Boolean:
+        if left.type != "boolean" or right.type != "boolean":
+            raise Exception("Can only perform 'or' operations on boolean values")
+
+        if left.value == "true" and left.type == "boolean":
+            return Boolean("boolean", "true")
+        
+        result = int(
+            left.value == "false"
+            and left.type == "boolean"
+            or right.value == "true"
+            and right.type == "boolean"
+        )
+        booleans = ["false", "true"]
+        return Boolean("boolean", booleans[result])
 
     def __eval_comparison_expr(self, left, right) -> Boolean:
         booleans = ["false", "true"]

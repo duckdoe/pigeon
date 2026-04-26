@@ -28,7 +28,29 @@ class Parser:
         return self.__parse_expr()
 
     def __parse_expr(self) -> asts.Expr:
-        return self.__parse_comparison_expr()
+        return self.__parse_or_expr()
+
+    def __parse_or_expr(self) -> asts.Expr:
+        left = self.__parse_and_expr()
+
+        while self.__cur_token().value == "and":
+            operator = self.__eat_token().value
+            right = self.__parse_and_expr()
+
+            left = asts.BinaryExpr("BinExpr", left, operator, right)
+
+        return left
+
+    def __parse_and_expr(self) -> asts.Expr:
+        left = self.__parse_comparison_expr()
+
+        while self.__cur_token().value == "or":
+            operator = self.__eat_token().value
+            right = self.__parse_comparison_expr()
+
+            left = asts.BinaryExpr("BinExpr", left, operator, right)
+
+        return left
 
     def __parse_comparison_expr(self) -> asts.Expr:
         left = self.__parse_comparison_arithmetic_expr()

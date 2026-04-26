@@ -3,7 +3,9 @@ from enum import Enum, auto
 
 
 class TokenType(Enum):
+    Or = auto()
     Eof = auto()
+    And = auto()
     Null = auto()
     Bang = auto()
     Bool = auto()
@@ -23,4 +25,10 @@ class Token:
     value: str
 
 
-keywords = {"true": TokenType.Bool, "false": TokenType.Bool, "null": TokenType.Null}
+keywords = {
+    "true": TokenType.Bool,
+    "false": TokenType.Bool,
+    "null": TokenType.Null,
+    "or": TokenType.Or,
+    "and": TokenType.And,
+}

@@ -1,5 +1,6 @@
-from frontend.asts import BinaryExpr, Program, Stmt, UnaryExpr
+from frontend.asts import BinaryExpr, Identifier, Program, Stmt, UnaryExpr
 
+from .environment import Environment
 from .values import Boolean, Null, Number, RuntimeValue, String
 
 
@@ -7,20 +8,20 @@ class Intpereter:
     def __init__(self, program: Program) -> None:
         self.program = program
 
-    def eval(self) -> RuntimeValue:
-        return self.__eval_program()
+    def eval(self, env) -> RuntimeValue:
+        return self.__evaluate_node(self.program, env)
 
-    def __eval_program(self) -> RuntimeValue:
+    def __eval_program(self, env: Environment) -> RuntimeValue:
         last_evaluated = Null("null")
 
         for node in self.program.body:
-            last_evaluated = self.__evaluate_node(node)
+            last_evaluated = self.__evaluate_node(node, env)
 
         return last_evaluated
 
-    def __eval_binary_expr(self, node: BinaryExpr) -> RuntimeValue:
-        left = self.__evaluate_node(node.left)
-        right = self.__evaluate_node(node.right)
+    def __eval_binary_expr(self, node: BinaryExpr, env: Environment) -> RuntimeValue:
+        left = self.__evaluate_node(node.left, env)
+        right = self.__evaluate_node(node.right, env)
 
         if (
             left.type == "number"
@@ -64,7 +65,7 @@ class Intpereter:
 
         if left.value == "true" and left.type == "boolean":
             return Boolean("boolean", "true")
-        
+
         result = int(
             left.value == "false"
             and left.type == "boolean"
@@ -112,9 +113,9 @@ class Intpereter:
 
         return Number("number", result)
 
-    def __eval_unary_expr(self, node: UnaryExpr):
+    def __eval_unary_expr(self, node: UnaryExpr, env):
         operator = node.operator
-        value = self.__evaluate_node(node.value)
+        value = self.__evaluate_node(node.value, env)
         booleans = ["true", "false"]
 
         if operator == "-" and value.type == "number":
@@ -128,10 +129,14 @@ class Intpereter:
             f"Type Error: Cannot perform '{operator}' on type '{value.type}'"
         )
 
-    def __evaluate_node(self, node: Stmt) -> RuntimeValue:
+    def __eval_identifier(self, node: Identifier, env: Environment) -> RuntimeValue:
+        env = env.resolve(node.symbol)
+        return env.look_up_var(node.symbol)
+
+    def __evaluate_node(self, node: Stmt, env: Environment) -> RuntimeValue:
         match node.kind:
             case "Program":
-                return self.__eval_program()
+                return self.__eval_program(env)
             case "NullLiteral":
                 return Null("null")
             case "NumericLiteral":
@@ -141,8 +146,10 @@ class Intpereter:
             case "StringLiteral":
                 return String("string", node.value)  # type: ignore
             case "BinExpr":
-                return self.__eval_binary_expr(node)  # type: ignore
+                return self.__eval_binary_expr(node, env)  # type: ignore
             case "UnaryExpr":
-                return self.__eval_unary_expr(node)  # type: ignore
+                return self.__eval_unary_expr(node, env)  # type: ignore
+            case "Identifier":
+                return self.__eval_identifier(node, env)  # type: ignore
             case _:
                 raise Exception(f"Unexpected Error while evaluating {node}")

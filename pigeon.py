@@ -18,10 +18,24 @@ def eval(input: str, env):
 def printlnfn(args: List[RuntimeValue]) -> Null:
     result = ""
 
-    for arg in args:
+    def return_string(arg: RuntimeValue):
         if arg.type == "nativefn":
-            result += "[NativeFn]"
-        result += str(arg.value) + " "  # type: ignore
+            return "[NativeFn]"
+        elif arg.type == "array":
+            result = "["
+
+            for i in range(len(arg.value) - 1):  # type: ignore
+                result += return_string(arg.value[i]) + ", "  # type: ignore
+
+            result += return_string(arg.value[-1]) + "]"  # type: ignore
+
+            return result
+
+        else:
+            return str(arg.value)  # type: ignore
+
+    for arg in args:
+        result = return_string(arg) + " "
 
     print(result)
     return Null("null")

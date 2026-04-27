@@ -1,7 +1,7 @@
 from dataclasses import dataclass
-from typing import Callable, Literal
+from typing import Callable, Literal, List
 
-ValueType = Literal["number", "null", "string", "boolean", "nativefn"]
+ValueType = Literal["number", "null", "string", "boolean", "nativefn", "array"]
 
 
 @dataclass
@@ -32,3 +32,7 @@ class Null(RuntimeValue):
 @dataclass
 class NativeFn(RuntimeValue):
     call: Callable
+
+@dataclass
+class Array(RuntimeValue):
+    value: List[RuntimeValue]

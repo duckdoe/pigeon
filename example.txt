@@ -1,1 +1,6 @@
-println("fortune", 12, true)
+let name = "fortune"
+const numbers = [1,2,3]
+
+println(2.0)
+
+println([name, 12, numbers])

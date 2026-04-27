@@ -9,7 +9,7 @@ from frontend.asts import (
 )
 
 from .environment import Environment
-from .values import Boolean, Null, Number, RuntimeValue, String
+from .values import Boolean, Null, Number, RuntimeValue, String, Array
 
 
 class Intpereter:
@@ -197,7 +197,7 @@ class Intpereter:
 
         fn = env.look_up_var(name)
         args = [self.__evaluate_node(arg, env) for arg in node.args]
-        
+
         return fn.call(args)  # type: ignore # this only works for native functions for now
 
     def __evaluate_node(self, node: Stmt, env: Environment) -> RuntimeValue:
@@ -226,5 +226,9 @@ class Intpereter:
                 return self.__eval_if_statement(node, env)
             case "CallExpr":
                 return self.__eval_call_expr(node, env)
+            case "ArrayLiteral":
+                return Array("array", [self.__evaluate_node(value, env) for value in node.properties]) # type: ignore
+            case "ElseStatement":
+                raise Exception("Illegal 'else' statement found")
             case _:
                 raise Exception(f"Unexpected Error while evaluating {node}")

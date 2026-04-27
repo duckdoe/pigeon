@@ -21,6 +21,8 @@ class TokenType(Enum):
     Rparen = auto()  # )
     LBrace = auto()  # {
     RBrace = auto()  # }
+    Lbrack = auto()  # [
+    Rbrack = auto()  # ]
     Number = auto()
     String = auto()
     Assign = auto()

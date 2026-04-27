@@ -17,6 +17,7 @@ NodeType = Literal[
     "IfStatement",
     "ElseStatement",
     "CallExpr",
+    "ArrayLiteral",
 ]
 
 
@@ -106,3 +107,7 @@ class CallExpr(Expr):
     args: (
         List[Expr] | None
     )  # variable declarations, if statements and function declarations cannot exist in arguments
+
+@dataclass
+class ArrayLiteral(Expr):
+    properties: List[Expr]

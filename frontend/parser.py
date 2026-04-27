@@ -1,7 +1,13 @@
 # TODO: Implement Call expressions
 # TODO: Implement native function calls
 # TODO: Implement println function for most types
-# TODO: Implement arrays/list <- i dont know what to call them
+# GOAL: Implement arrays/list <- i dont know what to call them
+# TODO: Support square brackets
+# TODO: Parse them into a valid node
+# TODO: Create a valid value to store during runtime
+# TODO: Implement a way to access those values
+# TODO: Implement a way to reassing array values
+
 # TODO: Implement comments and maybe multiine strings? <- Still a maybe
 
 from typing import List
@@ -131,7 +137,7 @@ class Parser:
         return self.__parse_assignment_expr()
 
     def __parse_assignment_expr(self) -> asts.Expr:
-        lhs = self.__parse_or_expr()
+        lhs = self.__parse_array_expr()
 
         if lhs.kind == "Identifier" and self.__cur_token().type == TokenType.Assign:
             self.__eat_token()  # eat '=' token
@@ -141,6 +147,30 @@ class Parser:
             return asts.AssignmentExpr("AssignmentExpr", lhs.symbol, rhs)  # type: ignore
 
         return lhs
+
+    def __parse_array_expr(self) -> asts.Expr:
+        if self.__cur_token().type != TokenType.Lbrack:
+            return self.__parse_or_expr()
+
+        self.__eat_token()  # eat '[' token
+        properties = [self.__parse_expr()]
+
+        while (
+            self.__cur_token().type == TokenType.Comma
+            and self.__cur_token().type != TokenType.Rbrack
+        ):
+            self.__eat_token()  # eat the ',' token
+            properties.append(self.__parse_expr())
+
+        if self.__cur_token().type != TokenType.Rbrack:
+            raise SyntaxError(
+                f"Unexpected token recieved, expected ']' got {self.__cur_token().value} at {self.__cur_token().ln}"
+            )
+
+        self.__eat_token()
+        array = asts.ArrayLiteral("ArrayLiteral", properties)
+
+        return array
 
     def __parse_or_expr(self) -> asts.Expr:
 

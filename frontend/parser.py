@@ -28,19 +28,94 @@ class Parser:
         match self.__cur_token().type:
             case TokenType.Let | TokenType.Const:
                 return self.__parse_var_declaration_stmt()
+            case TokenType.If:
+                return self.__parse_if_statement()
             case _:
                 return self.__parse_expr()
+
+    def __parse_if_statement(self) -> asts.IfStatment:
+        self.__eat_token()  # eat 'if' token
+
+        condition = self.__parse_expr()
+
+        if self.__eat_token().type != TokenType.LBrace:
+            raise SyntaxError(
+                "Unexpected token recieved, expected '{'"
+                + f"got {self.__cur_token().type} at [ln: {self.__cur_token().ln}]"
+            )
+
+        body = []
+        while self.__not_eof and self.__cur_token().type != TokenType.RBrace:
+            body.append(self.__parse_stmt())
+
+        if self.__eat_token().type != TokenType.RBrace:
+            raise SyntaxError(
+                "Unexepected end of file, expected '}'" + f" at {self.__cur_token().ln}"
+            )
+
+        branch = None
+
+        if self.__cur_token().type == TokenType.Else and self.__peek_token(
+            TokenType.If
+        ):
+            self.__eat_token()  # eat the 'else' token
+
+            branch = self.__parse_if_statement()
+
+            return asts.IfStatment("IfStatement", condition, body, branch)
+
+        elif self.__cur_token().type == TokenType.Else and not self.__peek_token(
+            TokenType.If
+        ):
+            self.__eat_token()  # eat 'else' token
+
+            branch_body = []
+            if self.__eat_token().type != TokenType.LBrace:
+                raise SyntaxError(
+                    "Unexpected token recieved, expected '{'"
+                    + f"got {self.__cur_token().type} at [ln: {self.__cur_token().ln}]"
+                )
+
+            while self.__not_eof and self.__cur_token().type != TokenType.RBrace:
+                branch_body.append(self.__parse_stmt())
+
+            if self.__eat_token().type != TokenType.RBrace:
+                raise SyntaxError(
+                    "Unexepected end of file, expected '}'"
+                    + f" at {self.__cur_token().ln}"
+                )
+
+            return asts.IfStatment(
+                "IfStatement",
+                condition,
+                body,
+                asts.ElseStatement("ElseStatement", branch_body),
+            )
+
+        return asts.IfStatment("IfStatement", condition, body, branch)
+
+    def __peek_token(self, tokentype: TokenType) -> bool:
+        if self.__not_eof():
+            return self.tokens[1].type == tokentype
+
+        return False
 
     def __parse_var_declaration_stmt(self) -> asts.VarDeclaration:
         var_type = self.__eat_token().value
 
         if self.__cur_token().type != TokenType.Ident:
-            raise Exception("Syntax Error")
+            raise SyntaxError(
+                f"Unexpected token recieved, expected an identifier got {self.__cur_token().type} at [ln: {self.__cur_token().ln}]"
+            )
 
-        name = self.__eat_token().value
+        name = self.__eat_token()
 
-        if self.__eat_token().type != TokenType.Assign:
-            raise Exception("Syntax Error")
+        if self.__cur_token().type != TokenType.Assign:
+            raise SyntaxError(
+                f"Unexpected token recieved, expected '=' got '{self.__cur_token().value}' at [ln: {self.__cur_token().ln}]"
+            )
+
+        self.__eat_token()  # Eat the '=' token
 
         value = self.__parse_expr()
         is_constant = True if var_type == "const" else False
@@ -65,7 +140,7 @@ class Parser:
         left = self.__parse_and_expr()
 
         while self.__cur_token().value == "and":
-            operator = self.__eat_token().value
+            operator = self.__eat_token()
             right = self.__parse_and_expr()
 
             left = asts.BinaryExpr("BinExpr", left, operator, right)
@@ -76,7 +151,7 @@ class Parser:
         left = self.__parse_comparison_expr()
 
         while self.__cur_token().value == "or":
-            operator = self.__eat_token().value
+            operator = self.__eat_token()
             right = self.__parse_comparison_expr()
 
             left = asts.BinaryExpr("BinExpr", left, operator, right)
@@ -87,7 +162,7 @@ class Parser:
         left = self.__parse_comparison_arithmetic_expr()
 
         while self.__cur_token().value == "==":
-            operator = self.__eat_token().value
+            operator = self.__eat_token()
 
             right = self.__parse_comparison_arithmetic_expr()
 
@@ -99,7 +174,7 @@ class Parser:
         left = self.__parse_additve_expr()
 
         while self.__cur_token().value in (">", "<", "<=", ">="):
-            operator = self.__eat_token().value
+            operator = self.__eat_token()
 
             right = self.__parse_additve_expr()
 
@@ -111,7 +186,7 @@ class Parser:
         left = self.__parse_multiplicitive_expr()
 
         while self.__cur_token().value in ("-", "+"):
-            operator = self.__eat_token().value
+            operator = self.__eat_token()
 
             right = self.__parse_multiplicitive_expr()
 
@@ -123,7 +198,7 @@ class Parser:
         left = self.__parse_unary_expr()
 
         while self.__cur_token().value in ("/", "*", "%"):
-            operator = self.__eat_token().value
+            operator = self.__eat_token()
 
             right = self.__parse_unary_expr()
 
@@ -135,7 +210,7 @@ class Parser:
         if self.__cur_token().value in ("-", "+", "!"):
             return asts.UnaryExpr(
                 "UnaryExpr",
-                self.__eat_token().value,
+                self.__eat_token(),
                 self.__parse_primary(self.__eat_token()),
             )
 
@@ -144,7 +219,7 @@ class Parser:
     def __parse_primary(self, token: Token) -> asts.Expr:
         match token.type:
             case TokenType.Ident:
-                return asts.Identifier("Identifier", token.value)
+                return asts.Identifier("Identifier", token)
             case TokenType.String:
                 return asts.StringLiteral("StringLiteral", token.value)
             case TokenType.Number:
@@ -154,7 +229,9 @@ class Parser:
                 value = self.__parse_expr()
 
                 if self.__cur_token().type != TokenType.Rparen:
-                    raise Exception(f"Syntax Error got {self.__cur_token()}")
+                    raise SyntaxError(
+                        f"Unexpected token recieved, expected ')' got '{token.value}' at [ln: {token.ln}]"
+                    )
 
                 self.__eat_token()
                 return value
@@ -163,4 +240,6 @@ class Parser:
             case TokenType.Null:
                 return asts.NullLiteral("NullLiteral", token.value)
             case _:
-                raise Exception(f"Syntax Error {token}")
+                raise SyntaxError(
+                    f"Unexpected token recieved, got '{token.value}' at [ln: {token.ln}]"
+                )

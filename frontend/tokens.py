@@ -3,6 +3,7 @@ from enum import Enum, auto
 
 
 class TokenType(Enum):
+    If = auto()
     Or = auto()
     And = auto()
     Let = auto()
@@ -10,11 +11,14 @@ class TokenType(Enum):
     Null = auto()
     Bang = auto()
     Bool = auto()
+    Else = auto()
     Const = auto()
     BinOp = auto()
     Ident = auto()
-    Lparen = auto()  # (
-    Rparen = auto()  # )
+    Lparen = auto() # (
+    Rparen = auto() # )
+    LBrace = auto() # {
+    RBrace = auto() # }
     Number = auto()
     String = auto()
     Assign = auto()
@@ -25,6 +29,7 @@ class TokenType(Enum):
 class Token:
     type: TokenType
     value: str
+    ln: int  # It means line dumbass
 
 
 keywords = {
@@ -35,4 +40,6 @@ keywords = {
     "and": TokenType.And,
     "let": TokenType.Let,
     "const": TokenType.Const,
+    "if": TokenType.If,
+    "else": TokenType.Else,
 }

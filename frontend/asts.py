@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import List, Literal
 
+from .tokens import Token
+
 NodeType = Literal[
     "BinExpr",
     "NumericLiteral",
@@ -11,7 +13,9 @@ NodeType = Literal[
     "BooleanLiteral",
     "NullLiteral",
     "VarDeclaration",
-    "AssignmentExpr"
+    "AssignmentExpr",
+    "IfStatement",
+    "ElseStatement",
 ]
 
 
@@ -32,13 +36,26 @@ class Program(Stmt):
 
 @dataclass
 class VarDeclaration(Stmt):
-    symbol: str
+    symbol: Token
     value: Expr
     is_constant: bool
 
+
+@dataclass
+class IfStatment(Stmt):
+    condition: Expr
+    body: List[Stmt]
+    branch: (
+        Stmt | None
+    )  # If statements can exist independently without any branch such as 'else if' or 'else'
+
+@dataclass
+class ElseStatement(Stmt):
+    body: List[Stmt]
+
 @dataclass
 class AssignmentExpr(Expr):
-    symbol: str
+    symbol: Token
     value: Expr
 
 
@@ -64,17 +81,17 @@ class NullLiteral(Expr):
 
 @dataclass
 class Identifier(Expr):
-    symbol: str
+    symbol: Token
 
 
 @dataclass
 class BinaryExpr(Expr):
     left: Expr
-    operator: str
+    operator: Token
     right: Expr
 
 
 @dataclass
 class UnaryExpr(Expr):
-    operator: str
+    operator: Token
     value: Expr

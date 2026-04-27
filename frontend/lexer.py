@@ -7,10 +7,14 @@ class Lexer:
     def __init__(self, input: str) -> None:
         self.input = input
         self.pos = 0
+        self.line = 1
         self.char = self.input[self.pos]
 
     def __advance(self):
         self.pos += 1
+
+        if self.char == "\n":
+            self.line += 1
 
         if self.pos >= len(self.input):
             self.char = "\0"
@@ -31,65 +35,73 @@ class Lexer:
 
         match self.char:
             case "\0":
-                token = Token(TokenType.Eof, self.char)
+                token = Token(TokenType.Eof, self.char, self.line)
             case "-":
-                token = Token(TokenType.BinOp, self.char)
+                token = Token(TokenType.BinOp, self.char, self.line)
             case "*":
-                token = Token(TokenType.BinOp, self.char)
+                token = Token(TokenType.BinOp, self.char, self.line)
             case "/":
-                token = Token(TokenType.BinOp, self.char)
+                token = Token(TokenType.BinOp, self.char, self.line)
             case "+":
-                token = Token(TokenType.BinOp, self.char)
-            case '%':
-                token = Token(TokenType.BinOp, self.char)
+                token = Token(TokenType.BinOp, self.char, self.line)
+            case "%":
+                token = Token(TokenType.BinOp, self.char, self.line)
             case ">":
-                if self.pos < len(self.input) - 1 and self.input[self.pos + 1] == '=':
-                    self.__advance() # "moves to the second equals"
-                    token = Token(TokenType.BinOp, '>=')
+                if self.pos < len(self.input) - 1 and self.input[self.pos + 1] == "=":
+                    self.__advance()  # "moves to the second equals"
+                    token = Token(TokenType.BinOp, ">=", self.line)
 
-                    self.__advance() # leaves the '='
+                    self.__advance()  # leaves the '='
                     return token
-                
-                token = Token(TokenType.BinOp, self.char)
+
+                token = Token(TokenType.BinOp, self.char, self.line)
             case "<":
-                if self.pos < len(self.input) - 1 and self.input[self.pos + 1] == '=':
-                    self.__advance() # "moves to the second equals"
-                    token = Token(TokenType.BinOp, '<=')
+                if self.pos < len(self.input) - 1 and self.input[self.pos + 1] == "=":
+                    self.__advance()  # "moves to the second equals"
+                    token = Token(TokenType.BinOp, "<=", self.line)
 
-                    self.__advance() # leaves the second '='
+                    self.__advance()  # leaves the second '='
                     return token
-                
-                token = Token(TokenType.BinOp, self.char)
+
+                token = Token(TokenType.BinOp, self.char, self.line)
             case "!":
-                token = Token(TokenType.Bang, self.char)
+                token = Token(TokenType.Bang, self.char, self.line)
             case "(":
-                token = Token(TokenType.Lparen, self.char)
+                token = Token(TokenType.Lparen, self.char, self.line)
             case ")":
-                token = Token(TokenType.Rparen, self.char)
+                token = Token(TokenType.Rparen, self.char, self.line)
+            case "{":
+                token = Token(TokenType.LBrace, self.char, self.line)
+            case "}":
+                token = Token(TokenType.RBrace, self.char, self.line)
             case '"' | "'":
-                literal = self.__make_string(self.char)
-                token = Token(TokenType.String, literal)
+                literal = self.__make_string(
+                    self.char,
+                )
+                token = Token(TokenType.String, literal, self.line)
             case "=":
-                if self.pos < len(self.input) - 1 and self.input[self.pos + 1] == '=':
-                    self.__advance() # "moves to the second equals"
-                    token = Token(TokenType.Equals, '==')
+                if self.pos < len(self.input) - 1 and self.input[self.pos + 1] == "=":
+                    self.__advance()  # "moves to the second equals"
+                    token = Token(TokenType.Equals, "==", self.line)
 
-                    self.__advance() # leaves the second '='
+                    self.__advance()  # leaves the second '='
                     return token
 
-                token = Token(TokenType.Assign, self.char)
+                token = Token(TokenType.Assign, self.char, self.line)
             case _:
                 if is_letter(self.char):
                     literal = self.__make_ident()
 
                     if literal in keywords:
-                        return Token(keywords[literal], literal)
+                        return Token(keywords[literal], literal, self.line)
 
-                    return Token(TokenType.Ident, literal)
+                    return Token(TokenType.Ident, literal, self.line)
                 elif is_number(self.char):
-                    return Token(TokenType.Number, self.__make_number())
+                    return Token(TokenType.Number, self.__make_number(), self.line)
 
-                raise Exception(f"Syntax Error got '{self.char}'")
+                raise SyntaxError(
+                    f"got '{self.char}' at [ln: {self.line}, col: {self.pos}]"
+                )
 
         self.__advance()
         return token
@@ -113,7 +125,7 @@ class Lexer:
             self.__advance()
 
         if dot_count > 1:
-            raise Exception("Syntax Error")
+            raise SyntaxError(f"got '.' at [ln: {self.line}, col: {self.pos - 1}]")
 
         return self.input[pos : self.pos]
 
@@ -125,7 +137,9 @@ class Lexer:
             self.__advance()
 
         if self.char != quote:
-            raise Exception("Unterminated string literal")
+            raise SyntaxError(
+                f"Unterminated string literal gotten at [ln: {self.line}, col: {self.pos}]"
+            )
 
         return self.input[pos : self.pos]
 

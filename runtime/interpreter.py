@@ -43,8 +43,8 @@ class Intpereter:
             and node.operator.value in (">", "<", ">=", "<=")
         ):
             return self.__eval_arithmetic_comparison(left, right, node.operator)
-        elif node.operator.value == "==":
-            return self.__eval_comparison_expr(left, right)
+        elif node.operator.value in ("==", "!="):
+            return self.__eval_comparison_expr(left, right, node.operator)
         elif node.operator.value == "and":
             return self.__eval_short_circuit_and_expr(left, right, node.operator.ln)
         elif node.operator.value == "or":
@@ -87,9 +87,13 @@ class Intpereter:
         booleans = ["false", "true"]
         return Boolean("boolean", booleans[result])
 
-    def __eval_comparison_expr(self, left, right) -> Boolean:
+    def __eval_comparison_expr(self, left, right, operator: Token) -> Boolean:
         booleans = ["false", "true"]
+
         result = int(left.type == right.type and left.value == right.value)
+
+        if operator.value == "!=":
+            result -= 1  # This basically just flips the value
 
         return Boolean("boolean", booleans[result])
 
@@ -186,6 +190,16 @@ class Intpereter:
 
             return Null("null")
 
+    def __eval_call_expr(self, node, env: Environment):
+        name = ""
+        if node.caller.kind == "Identifier":
+            name = node.caller.symbol.value
+
+        fn = env.look_up_var(name)
+        args = [self.__evaluate_node(arg, env) for arg in node.args]
+        
+        return fn.call(args)  # type: ignore # this only works for native functions for now
+
     def __evaluate_node(self, node: Stmt, env: Environment) -> RuntimeValue:
         match node.kind:
             case "Program":
@@ -210,5 +224,7 @@ class Intpereter:
                 return self.__eval_var_assignment(node, env)  # type: ignore
             case "IfStatement":
                 return self.__eval_if_statement(node, env)
+            case "CallExpr":
+                return self.__eval_call_expr(node, env)
             case _:
                 raise Exception(f"Unexpected Error while evaluating {node}")

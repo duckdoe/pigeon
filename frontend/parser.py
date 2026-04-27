@@ -1,3 +1,9 @@
+# TODO: Implement Call expressions
+# TODO: Implement native function calls
+# TODO: Implement println function for most types
+# TODO: Implement arrays/list <- i dont know what to call them
+# TODO: Implement comments and maybe multiine strings? <- Still a maybe
+
 from typing import List
 
 from . import asts
@@ -137,6 +143,7 @@ class Parser:
         return lhs
 
     def __parse_or_expr(self) -> asts.Expr:
+
         left = self.__parse_and_expr()
 
         while self.__cur_token().value == "and":
@@ -161,7 +168,7 @@ class Parser:
     def __parse_comparison_expr(self) -> asts.Expr:
         left = self.__parse_comparison_arithmetic_expr()
 
-        while self.__cur_token().value == "==":
+        while self.__cur_token().value in ("==", "!="):
             operator = self.__eat_token()
 
             right = self.__parse_comparison_arithmetic_expr()
@@ -211,10 +218,41 @@ class Parser:
             return asts.UnaryExpr(
                 "UnaryExpr",
                 self.__eat_token(),
-                self.__parse_primary(self.__eat_token()),
+                self.__parse_call_expr(),
             )
 
-        return self.__parse_primary(self.__eat_token())
+        return self.__parse_call_expr()
+
+    def __parse_call_expr(self) -> asts.Expr:
+        caller = self.__parse_primary(self.__eat_token())
+        args = None
+
+        if self.__cur_token().type == TokenType.Lparen:
+            self.__eat_token()
+            args = self.__parse_args()
+
+            caller = asts.CallExpr("CallExpr", caller, args)
+
+        return caller
+
+    def __parse_args(self) -> List[asts.Expr]:
+        args = [self.__parse_expr()]
+
+        while (
+            self.__cur_token().type == TokenType.Comma
+            and self.__cur_token().type != TokenType.Rparen
+        ):
+            self.__eat_token()
+            args.append(self.__parse_expr())
+
+        if self.__cur_token().type != TokenType.Rparen:
+            raise SyntaxError(
+                f"Unclosed parethesis during function call at [ln: {self.__cur_token().ln}]"
+            )
+
+        self.__eat_token()  # eats ')' token
+
+        return args
 
     def __parse_primary(self, token: Token) -> asts.Expr:
         match token.type:

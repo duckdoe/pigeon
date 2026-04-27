@@ -16,6 +16,7 @@ NodeType = Literal[
     "AssignmentExpr",
     "IfStatement",
     "ElseStatement",
+    "CallExpr",
 ]
 
 
@@ -49,9 +50,11 @@ class IfStatment(Stmt):
         Stmt | None
     )  # If statements can exist independently without any branch such as 'else if' or 'else'
 
+
 @dataclass
 class ElseStatement(Stmt):
     body: List[Stmt]
+
 
 @dataclass
 class AssignmentExpr(Expr):
@@ -95,3 +98,11 @@ class BinaryExpr(Expr):
 class UnaryExpr(Expr):
     operator: Token
     value: Expr
+
+
+@dataclass
+class CallExpr(Expr):
+    caller: Expr
+    args: (
+        List[Expr] | None
+    )  # variable declarations, if statements and function declarations cannot exist in arguments

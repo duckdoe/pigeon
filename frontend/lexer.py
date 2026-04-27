@@ -46,6 +46,8 @@ class Lexer:
                 token = Token(TokenType.BinOp, self.char, self.line)
             case "%":
                 token = Token(TokenType.BinOp, self.char, self.line)
+            case ",":
+                token = Token(TokenType.Comma, self.char, self.line)
             case ">":
                 if self.pos < len(self.input) - 1 and self.input[self.pos + 1] == "=":
                     self.__advance()  # "moves to the second equals"
@@ -65,7 +67,15 @@ class Lexer:
 
                 token = Token(TokenType.BinOp, self.char, self.line)
             case "!":
+                if self.pos < len(self.input) - 1 and self.input[self.pos + 1] == "=":
+                    self.__advance()  # moves to the 'equals
+
+                    token = Token(TokenType.NotEq, "!=", self.line)
+                    self.__advance()
+
+                    return token
                 token = Token(TokenType.Bang, self.char, self.line)
+
             case "(":
                 token = Token(TokenType.Lparen, self.char, self.line)
             case ")":

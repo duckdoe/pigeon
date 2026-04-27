@@ -1,9 +1,1 @@
-let name = "fortune"
-
-if name == "olamide"{
-    name
-} else if name == "juwon"{
-    name = "olamide"
-}
-
-name
+println("fortune", 12, true)

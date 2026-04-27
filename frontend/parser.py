@@ -1,14 +1,6 @@
-# TODO: Implement Call expressions
-# TODO: Implement native function calls
-# TODO: Implement println function for most types
-# GOAL: Implement arrays/list <- i dont know what to call them
-# TODO: Support square brackets
-# TODO: Parse them into a valid node
-# TODO: Create a valid value to store during runtime
-# TODO: Implement a way to access those values
 # TODO: Implement a way to reassigning array values # TODO will not do now!
 
-# TODO: Implement comments and maybe multiine strings? <- Still a maybe
+# TODO: Implement shorthand binary expressions, and also support postincrement and postdecrement operations
 
 from typing import List, Optional
 
@@ -42,8 +34,38 @@ class Parser:
                 return self.__parse_var_declaration_stmt()
             case TokenType.If:
                 return self.__parse_if_statement()
+            case TokenType.While:
+                return self.__parse_while_stmt()
+            case TokenType.Break:
+                self.__eat_token()
+                return asts.BreakStmt("BreakStmt")
+            case TokenType.Continue:
+                self.__eat_token()
+                return asts.BreakStmt("ContinueStmt")
             case _:
                 return self.__parse_expr()
+
+    def __parse_while_stmt(self) -> asts.Stmt:
+        # I have no fucking idea what to do 😭
+        self.__eat_token()  # eat 'while' token
+        condition = self.__parse_expr()
+
+        if self.__eat_token().type != TokenType.LBrace:
+            raise SyntaxError(
+                "Unexpected token recieved, expected '{'"
+                + f"got {self.__cur_token().type} at [ln: {self.__cur_token().ln}]"
+            )
+
+        body = []
+        while self.__not_eof() and self.__cur_token().type != TokenType.RBrace:
+            body.append(self.__parse_stmt())
+
+        if self.__eat_token().type != TokenType.RBrace:
+            raise SyntaxError(
+                "Unexepected end of file, expected '}'" + f" at {self.__cur_token().ln}"
+            )
+
+        return asts.WhileStmt("WhileStmt", condition, body)
 
     def __parse_if_statement(self) -> asts.IfStatment:
         self.__eat_token()  # eat 'if' token
@@ -57,7 +79,7 @@ class Parser:
             )
 
         body = []
-        while self.__not_eof and self.__cur_token().type != TokenType.RBrace:
+        while self.__not_eof() and self.__cur_token().type != TokenType.RBrace:
             body.append(self.__parse_stmt())
 
         if self.__eat_token().type != TokenType.RBrace:
@@ -139,7 +161,14 @@ class Parser:
     def __parse_assignment_expr(self) -> asts.Expr:
         lhs = self.__parse_array_expr()
 
-        if lhs.kind == "Identifier" and self.__cur_token().type == TokenType.Assign:
+        if (
+            lhs.kind == "Identifier"
+            and self.__cur_token().type == TokenType.Assign
+            or self.__cur_token().value in ("+=", "-=", "/=", "*=", "%=")
+        ):
+            if self.__cur_token().type == TokenType.BinOp:
+                return self.__parse_shorthand_binexpr(lhs)
+
             self.__eat_token()  # eat '=' token
 
             rhs = self.__parse_expr()
@@ -147,6 +176,75 @@ class Parser:
             return asts.AssignmentExpr("AssignmentExpr", lhs.symbol, rhs)  # type: ignore
 
         return lhs
+
+    def __parse_shorthand_binexpr(self, left) -> asts.AssignmentExpr:
+        if self.__cur_token().value == "+=":
+            self.__eat_token()
+
+            result = asts.AssignmentExpr(
+                "AssignmentExpr",
+                left.symbol,
+                asts.BinaryExpr(
+                    "BinExpr",
+                    self.__parse_primary(left.symbol),
+                    Token(TokenType.BinOp, "+", self.__cur_token().ln),
+                    self.__parse_expr(),
+                ),
+            )
+        elif self.__cur_token().value == "-=":
+            self.__eat_token()
+
+            result = asts.AssignmentExpr(
+                "AssignmentExpr",
+                left.symbol,
+                asts.BinaryExpr(
+                    "BinExpr",
+                    self.__parse_primary(left.symbol),
+                    Token(TokenType.BinOp, "-", self.__cur_token().ln),
+                    self.__parse_expr(),
+                ),
+            )
+        elif self.__cur_token().value == "/=":
+            self.__eat_token()
+
+            result = asts.AssignmentExpr(
+                "AssignmentExpr",
+                left.symbol,
+                asts.BinaryExpr(
+                    "BinExpr",
+                    self.__parse_primary(left.symbol),
+                    Token(TokenType.BinOp, "/", self.__cur_token().ln),
+                    self.__parse_expr(),
+                ),
+            )
+        elif self.__cur_token().value == "*=":
+            self.__eat_token()
+
+            result = asts.AssignmentExpr(
+                "AssignmentExpr",
+                left.symbol,
+                asts.BinaryExpr(
+                    "BinExpr",
+                    self.__parse_primary(left.symbol),
+                    Token(TokenType.BinOp, "*", self.__cur_token().ln),
+                    self.__parse_expr(),
+                ),
+            )
+        else:
+            self.__eat_token()
+
+            result = asts.AssignmentExpr(
+                "AssignmentExpr",
+                left.symbol,
+                asts.BinaryExpr(
+                    "BinExpr",
+                    self.__parse_primary(left.symbol),
+                    Token(TokenType.BinOp, "%", self.__cur_token().ln),
+                    self.__parse_expr(),
+                ),
+            )
+
+        return result
 
     def __parse_array_expr(self) -> asts.Expr:
         if self.__cur_token().type != TokenType.Lbrack:

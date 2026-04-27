@@ -1,3 +1,4 @@
+from errors import IllegalBreakError, IllegalContinueError
 from frontend.asts import (
     AssignmentExpr,
     BinaryExpr,
@@ -226,6 +227,24 @@ class Intpereter:
 
         return object.value[int(property.value)]
 
+    def __eval_while_stmt(self, node, env: Environment) -> RuntimeValue:
+        # print(self.__evaluate_node(node.condition, env))
+        while self.__evaluate_node(node.condition, env).value == "true": # type: ignore
+            stop = False
+            for n in node.body:
+                try:
+                    self.__evaluate_node(n, env)
+                except IllegalBreakError:
+                    stop = True
+                    break
+                except IllegalContinueError:
+                    break  # This breaks out of the evaluating loop so we don't evaluate anymore nodes in the body, and just move straight back into evaluating the condition and then moving on with evaluating the body, I hope this works
+
+            if stop is True:
+                break
+
+        return Null("null")
+
     def __evaluate_node(self, node: Stmt, env: Environment) -> RuntimeValue:
         match node.kind:
             case "Program":
@@ -257,9 +276,13 @@ class Intpereter:
                     "array",
                     [self.__evaluate_node(value, env) for value in node.properties],  # type: ignore
                 )
-            case "ElseStatement":
-                raise Exception("Illegal 'else' statement found")
             case "MemberExpr":
                 return self.__eval_member_expr(node, env)  # type: ignore
+            case "BreakStmt":
+                raise IllegalBreakError("Illegal 'break' statement found")
+            case "ContinueStmt":
+                raise IllegalContinueError("Illegal 'continue' statement found")
+            case "WhileStmt":
+                return self.__eval_while_stmt(node, env)
             case _:
                 raise Exception(f"Unexpected Error while evaluating {node}")

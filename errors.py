@@ -31,3 +31,10 @@ class DivideByZeroError(Error):
 
     def __repr__(self) -> str:
         return f"[DivideByZero Error] {self.msg}"
+
+
+class IllegalBreakError(Exception):
+    pass
+
+class IllegalContinueError(Exception):
+    pass

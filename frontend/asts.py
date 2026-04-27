@@ -19,6 +19,9 @@ NodeType = Literal[
     "CallExpr",
     "ArrayLiteral",
     "MemberExpr",
+    "WhileStmt",
+    "BreakStmt",
+    "ContinueStmt"
 ]
 
 
@@ -56,6 +59,28 @@ class IfStatment(Stmt):
 @dataclass
 class ElseStatement(Stmt):
     body: List[Stmt]
+
+
+@dataclass
+class WhileStmt(Stmt):
+    condition: Expr
+    body: List[Stmt]
+
+@dataclass
+class ForStmt(Stmt):
+    declaration: VarDeclaration
+    action: Expr # Couldn't find a better name but i think it is descriptive enough, just means what the for loop does after it has ran the body
+    condition: Expr
+    body: List[Stmt]
+
+@dataclass
+class BreakStmt(Stmt):
+    pass
+
+
+@dataclass
+class ContinueStmt(Stmt):
+    pass
 
 
 @dataclass
@@ -109,9 +134,11 @@ class CallExpr(Expr):
         List[Expr] | None
     )  # variable declarations, if statements and function declarations cannot exist in arguments
 
+
 @dataclass
 class ArrayLiteral(Expr):
     properties: List[Expr]
+
 
 @dataclass
 class MemberExpr(Expr):

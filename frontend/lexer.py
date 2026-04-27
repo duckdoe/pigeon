@@ -37,22 +37,59 @@ class Lexer:
             case "\0":
                 token = Token(TokenType.Eof, self.char, self.line)
             case "-":
+                if self.pos < len(self.input) - 1 and self.input[self.pos + 1] == "=":
+                    self.__advance()  # "moves to the second equals"
+                    token = Token(TokenType.BinOp, "-=", self.line)
+
+                    self.__advance()  # leaves the second '='
+                    return token
                 token = Token(TokenType.BinOp, self.char, self.line)
             case "*":
+                if self.pos < len(self.input) - 1 and self.input[self.pos + 1] == "=":
+                    self.__advance()  # "moves to the second equals"
+                    token = Token(TokenType.BinOp, "*+=", self.line)
+
+                    self.__advance()  # leaves the second '='
+                    return token
                 token = Token(TokenType.BinOp, self.char, self.line)
             case "/":
                 if self.pos < len(self.input) - 1 and self.input[self.pos + 1] == "/":
-                    while self.char != "\n" and self.char != '\0':
+                    while self.char != "\n" and self.char != "\0":
                         self.__advance()
 
                     return self.tokenize()
+                
+                if self.pos < len(self.input) - 1 and self.input[self.pos + 1] == "=":
+                    self.__advance()  # "moves to the second equals"
+                    token = Token(TokenType.BinOp, "/=", self.line)
+
+                    self.__advance()  # leaves the second '='
+                    return token
 
                 token = Token(TokenType.BinOp, self.char, self.line)
             case "+":
+                if self.pos < len(self.input) - 1 and self.input[self.pos + 1] == "=":
+                    self.__advance()  # "moves to the second equals"
+                    token = Token(TokenType.BinOp, "+=", self.line)
+
+                    self.__advance()  # leaves the second '='
+                    return token
                 token = Token(TokenType.BinOp, self.char, self.line)
             case "%":
+                if self.pos < len(self.input) - 1 and self.input[self.pos + 1] == "=":
+                    self.__advance()  # "moves to the second equals"
+                    token = Token(TokenType.BinOp, "%=", self.line)
+
+                    self.__advance()  # leaves the second '='
+                    return token
                 token = Token(TokenType.BinOp, self.char, self.line)
             case ",":
+                if self.pos < len(self.input) - 1 and self.input[self.pos + 1] == "=":
+                    self.__advance()  # "moves to the second equals"
+                    token = Token(TokenType.Equals, "=", self.line)
+
+                    self.__advance()  # leaves the second '='
+                    return token
                 token = Token(TokenType.Comma, self.char, self.line)
             case ">":
                 if self.pos < len(self.input) - 1 and self.input[self.pos + 1] == "=":
@@ -101,6 +138,10 @@ class Lexer:
                     self.char,
                 )
                 token = Token(TokenType.String, literal, self.line)
+            case "`":
+                token = Token(
+                    TokenType.String, self.__make_multiline_string(self.char), self.line
+                )
             case "=":
                 if self.pos < len(self.input) - 1 and self.input[self.pos + 1] == "=":
                     self.__advance()  # "moves to the second equals"
@@ -162,6 +203,15 @@ class Lexer:
             raise SyntaxError(
                 f"Unterminated string literal gotten at [ln: {self.line}, col: {self.pos}]"
             )
+
+        return self.input[pos : self.pos]
+
+    def __make_multiline_string(self, quote: str) -> str:
+        self.__advance()  # advance past the starting quote
+        pos = self.pos
+
+        while self.char != quote:
+            self.__advance()
 
         return self.input[pos : self.pos]
 

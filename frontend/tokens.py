@@ -18,6 +18,8 @@ class TokenType(Enum):
     BinOp = auto()
     Ident = auto()
     NotEq = auto()
+    Break = auto()
+    While = auto()
     Lparen = auto()  # (
     Rparen = auto()  # )
     LBrace = auto()  # {
@@ -28,6 +30,14 @@ class TokenType(Enum):
     String = auto()
     Assign = auto()
     Equals = auto()
+    Return = auto()
+    PostI = (
+        auto()
+    )  # means 'postincrement' -> '++' i was too tired to come up with something more expressive
+    PostD = (
+        auto()
+    )  # means 'postdecrement'-> '--' i was too tired to come up with something more expressive
+    Continue = auto()
 
 
 @dataclass
@@ -47,4 +57,8 @@ keywords = {
     "const": TokenType.Const,
     "if": TokenType.If,
     "else": TokenType.Else,
+    "break": TokenType.Break,
+    "continue": TokenType.Continue,
+    "return": TokenType.Return,
+    "while": TokenType.While,
 }

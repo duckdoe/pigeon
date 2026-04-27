@@ -1,5 +1,5 @@
-// This should work!
+let name = 1
+println(name)
 
-const names = ["fortune", "olamide", "juwon", [1,2,3]]
-
-println(names[3][1])
+name += 3 + 2
+println(name)

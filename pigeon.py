@@ -26,7 +26,6 @@ def run_program():
     except ValueError:
         print("Welcome pigeon v0.0.1, start typing have fun \\(^-^)/")
         env = Environment()
-        env.declare_var("x", Number("number", 12))
 
         while True:
             code = input("> ").strip()

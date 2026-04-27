@@ -11,6 +11,7 @@ NodeType = Literal[
     "BooleanLiteral",
     "NullLiteral",
     "VarDeclaration",
+    "AssignmentExpr"
 ]
 
 

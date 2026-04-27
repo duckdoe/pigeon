@@ -135,9 +135,15 @@ class Intpereter:
 
     def __eval_var_declaration(self, node, env: Environment) -> Null:
         value = self.__evaluate_node(node.value, env)
-        env.declare_var(node.symbol, value)
+        env.declare_var(node.symbol, value, node.is_constant)
 
         return Null("null")
+
+    def __eval_var_assignment(self, node, env: Environment) -> RuntimeValue:
+        value = self.__evaluate_node(node.value, env)
+
+        env.assign_var(node.symbol, value)
+        return value
 
     def __evaluate_node(self, node: Stmt, env: Environment) -> RuntimeValue:
         match node.kind:
@@ -159,5 +165,7 @@ class Intpereter:
                 return self.__eval_identifier(node, env)  # type: ignore
             case "VarDeclaration":
                 return self.__eval_var_declaration(node, env)
+            case "AssignmentExpr":
+                return self.__eval_var_assignment(node, env)
             case _:
                 raise Exception(f"Unexpected Error while evaluating {node}")

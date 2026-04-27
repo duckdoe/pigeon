@@ -88,6 +88,8 @@ class Lexer:
                 token = Token(TokenType.Lbrack, self.char, self.line)
             case "]":
                 token = Token(TokenType.Rbrack, self.char, self.line)
+            case ".":
+                token = Token(TokenType.Dot, self.char, self.line)
             case '"' | "'":
                 literal = self.__make_string(
                     self.char,

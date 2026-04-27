@@ -18,6 +18,7 @@ NodeType = Literal[
     "ElseStatement",
     "CallExpr",
     "ArrayLiteral",
+    "MemberExpr",
 ]
 
 
@@ -111,3 +112,9 @@ class CallExpr(Expr):
 @dataclass
 class ArrayLiteral(Expr):
     properties: List[Expr]
+
+@dataclass
+class MemberExpr(Expr):
+    object: Expr
+    property: Expr
+    computed: bool

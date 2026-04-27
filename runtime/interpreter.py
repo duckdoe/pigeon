@@ -2,6 +2,7 @@ from frontend.asts import (
     AssignmentExpr,
     BinaryExpr,
     Identifier,
+    MemberExpr,
     Program,
     Stmt,
     Token,
@@ -9,7 +10,7 @@ from frontend.asts import (
 )
 
 from .environment import Environment
-from .values import Boolean, Null, Number, RuntimeValue, String, Array
+from .values import Array, Boolean, Null, Number, RuntimeValue, String
 
 
 class Intpereter:
@@ -191,14 +192,39 @@ class Intpereter:
             return Null("null")
 
     def __eval_call_expr(self, node, env: Environment):
-        name = ""
-        if node.caller.kind == "Identifier":
-            name = node.caller.symbol.value
-
-        fn = env.look_up_var(name)
+        fn = self.__evaluate_node(node.caller, env)
         args = [self.__evaluate_node(arg, env) for arg in node.args]
 
         return fn.call(args)  # type: ignore # this only works for native functions for now
+
+    def __eval_member_expr(self, node: MemberExpr, env: Environment) -> RuntimeValue:
+        if node.computed:
+            object = self.__evaluate_node(node.object, env)
+            property = self.__evaluate_node(node.property, env)
+
+            if property.type == "number" and object.type == "array":
+                return self.__eval_array_member(object, property)
+            else:
+                raise TypeError(
+                    f"Cannot perform member call on object of type '{object.type}"
+                )
+        else:
+            return Null(
+                "null"
+            )  # I have no idea why this is here but i think i need it.
+
+    def __eval_array_member(self, object, property):
+        remainder = property.value % 1
+
+        if remainder != 0:
+            raise TypeError(
+                f"Array Indices must be an imterger value like '1' or '0' not {property.value}"
+            )
+
+        if len(object.value) < int(property.value):
+            raise IndexError("Array index out of range")
+
+        return object.value[int(property.value)]
 
     def __evaluate_node(self, node: Stmt, env: Environment) -> RuntimeValue:
         match node.kind:
@@ -227,8 +253,13 @@ class Intpereter:
             case "CallExpr":
                 return self.__eval_call_expr(node, env)
             case "ArrayLiteral":
-                return Array("array", [self.__evaluate_node(value, env) for value in node.properties]) # type: ignore
+                return Array(
+                    "array",
+                    [self.__evaluate_node(value, env) for value in node.properties],  # type: ignore
+                )
             case "ElseStatement":
                 raise Exception("Illegal 'else' statement found")
+            case "MemberExpr":
+                return self.__eval_member_expr(node, env)  # type: ignore
             case _:
                 raise Exception(f"Unexpected Error while evaluating {node}")

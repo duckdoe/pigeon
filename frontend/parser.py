@@ -10,7 +10,7 @@
 
 # TODO: Implement comments and maybe multiine strings? <- Still a maybe
 
-from typing import List
+from typing import List, Optional
 
 from . import asts
 from .tokens import Token, TokenType
@@ -254,10 +254,10 @@ class Parser:
         return self.__parse_call_expr()
 
     def __parse_call_expr(self) -> asts.Expr:
-        caller = self.__parse_primary(self.__eat_token())
+        caller = self.__parse_member_expr()
         args = None
 
-        if self.__cur_token().type == TokenType.Lparen:
+        while self.__cur_token().type == TokenType.Lparen:
             self.__eat_token()
             args = self.__parse_args()
 
@@ -266,7 +266,9 @@ class Parser:
         return caller
 
     def __parse_args(self) -> List[asts.Expr]:
-        args = [self.__parse_expr()]
+        args = (
+            [self.__parse_expr()] if self.__cur_token().type != TokenType.Rparen else []
+        )
 
         while (
             self.__cur_token().type == TokenType.Comma
@@ -283,6 +285,40 @@ class Parser:
         self.__eat_token()  # eats ')' token
 
         return args
+
+    def __parse_member_expr(self) -> asts.Expr:
+        obj = self.__parse_primary(self.__eat_token())
+
+        while (
+            self.__cur_token().type == TokenType.Dot
+            or self.__cur_token().type == TokenType.Lbrack
+        ):
+            operator = self.__eat_token()
+
+            property: Optional[asts.Expr]
+            computed: bool
+
+            if operator.type == TokenType.Dot:
+                computed = False
+                property = self.__parse_primary(self.__eat_token())
+                if property.kind != "Identifier":
+                    raise Exception(
+                        "Cannot use dot operator without right hand side being an identifier"
+                    )
+            else:
+                computed = True
+                property = self.__parse_expr()
+
+                if self.__eat_token().type != TokenType.Rbrack:
+                    raise SyntaxError(
+                        f"Unclosed '[' literal goten at [ln: {self.__cur_token().ln}]"
+                    )
+
+            obj = asts.MemberExpr("MemberExpr", obj, property, computed)  # type: ignore
+
+        return obj  # type: ignore
+
+        return obj
 
     def __parse_primary(self, token: Token) -> asts.Expr:
         match token.type:

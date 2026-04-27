@@ -1,3 +1,5 @@
+// This should work!
+
 const names = ["fortune", "olamide", "juwon", [1,2,3]]
 
 println(names[3][1])

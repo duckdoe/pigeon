@@ -41,6 +41,12 @@ class Lexer:
             case "*":
                 token = Token(TokenType.BinOp, self.char, self.line)
             case "/":
+                if self.pos < len(self.input) - 1 and self.input[self.pos + 1] == "/":
+                    while self.char != "\n" and self.char != '\0':
+                        self.__advance()
+
+                    return self.tokenize()
+
                 token = Token(TokenType.BinOp, self.char, self.line)
             case "+":
                 token = Token(TokenType.BinOp, self.char, self.line)

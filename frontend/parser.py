@@ -6,7 +6,7 @@
 # TODO: Parse them into a valid node
 # TODO: Create a valid value to store during runtime
 # TODO: Implement a way to access those values
-# TODO: Implement a way to reassing array values
+# TODO: Implement a way to reassigning array values # TODO will not do now!
 
 # TODO: Implement comments and maybe multiine strings? <- Still a maybe
 

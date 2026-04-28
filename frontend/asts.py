@@ -25,7 +25,8 @@ NodeType = Literal[
     "PostFixExpr",
     "ForStmt",
     "FunctionDeclaration",
-    "ReturnStmt"
+    "ReturnStmt",
+    "FunctionExpr"
 ]
 
 
@@ -161,3 +162,8 @@ class MemberExpr(Expr):
     object: Expr
     property: Expr
     computed: bool
+
+@dataclass
+class FunctionExpr(Expr):
+    params: List[Expr]
+    body: List[Stmt]

@@ -1,11 +1,8 @@
-fn range(start, end) {
-    while true{
-        if start == end{
-            return end
-        }
+let array = [fn (name) {
+    return ("Hello " + name)
+}]
 
-        start++
-    }
-}
+let greet = array[0]
+let greeting = greet("fortune")
 
-println(range(1,2))
+println(greeting)

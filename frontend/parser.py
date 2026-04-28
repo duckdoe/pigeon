@@ -229,7 +229,32 @@ class Parser:
         return asts.VarDeclaration("VarDeclaration", name, value, is_constant)
 
     def __parse_expr(self) -> asts.Expr:
-        return self.__parse_assignment_expr()
+        return self.__parse_function_expr()
+
+    def __parse_function_expr(self) -> asts.Expr:
+        if self.__cur_token().type != TokenType.Fn:
+            return self.__parse_assignment_expr()
+
+        self.__eat_token()  # eat the 'fn' token
+
+        if self.__eat_token().type != TokenType.Lparen:
+            raise Exception(f"Expected '(' got '{self.__cur_token().value}'")
+
+        params = self.__parse_args()
+
+        if self.__eat_token().type != TokenType.LBrace:
+            raise Exception("Expected '{' got " + f"'{self.__cur_token().value}'")
+
+        body = []
+        while self.__cur_token().type != TokenType.RBrace:
+            body.append(self.__parse_stmt())
+
+        if self.__eat_token().type != TokenType.RBrace:
+            raise SyntaxError(
+                "Expected '}' got " + f"'{self.__cur_token().value}' instead"
+            )
+
+        return asts.FunctionExpr("FunctionExpr", params, body)
 
     def __parse_assignment_expr(self) -> asts.Expr:
         lhs = self.__parse_array_expr()

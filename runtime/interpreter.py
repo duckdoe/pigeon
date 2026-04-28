@@ -318,6 +318,15 @@ class Intpereter:
         env.parent.declare_var(name, fn, True)  # type: ignore
         return Null("null")
 
+    def __eval_function_expr(self, node, env):
+        for param in node.params:
+            if param.kind != "Identifier":
+                raise SyntaxError(
+                    "Function parameters can only be of type 'identifiers'"
+                )
+
+        return Function("function", env, node.params, node.body)
+
     def __evaluate_node(self, node: Stmt, env: Environment) -> RuntimeValue:
         match node.kind:
             case "Program":
@@ -369,5 +378,8 @@ class Intpereter:
                 raise IllegalReturnError(
                     "'return' statements can only exist in functions", node
                 )
+            case "FunctionExpr":
+                scope = Environment(env)
+                return self.__eval_function_expr(node, scope)
             case _:
                 raise Exception(f"Unexpected Error while evaluating {node}")

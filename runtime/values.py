@@ -1,7 +1,10 @@
 from dataclasses import dataclass
-from typing import Callable, Literal, List
+from typing import Callable, List, Literal
 
-ValueType = Literal["number", "null", "string", "boolean", "nativefn", "array"]
+from frontend.asts import Stmt, Identifier
+from .environment import Environment
+
+ValueType = Literal["number", "null", "string", "boolean", "nativefn", "array", "function"]
 
 
 @dataclass
@@ -33,6 +36,14 @@ class Null(RuntimeValue):
 class NativeFn(RuntimeValue):
     call: Callable
 
+
 @dataclass
 class Array(RuntimeValue):
     value: List[RuntimeValue]
+
+
+@dataclass
+class Function(RuntimeValue):
+    declaration_env: Environment
+    params: List[Identifier]
+    call: List[Stmt]

@@ -38,3 +38,6 @@ class IllegalBreakError(Exception):
 
 class IllegalContinueError(Exception):
     pass
+
+class IllegalReturnError(Exception):
+    pass

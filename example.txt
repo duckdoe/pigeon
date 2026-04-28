@@ -1,18 +1,11 @@
-let num = 10
+fn range(start, end) {
+    while true{
+        if start == end{
+            return end
+        }
 
-// while num > 0 {
-//    num--
-//    println(num)
-// }
-
-let i = 2
-
-for let i = 0; i <= 10; i++{ // for loops will have to be lexically scoped to avoid polluting the global scope
-    if i == 4 {
-        break
+        start++
     }
-
-    println(i)
 }
 
-println(i)
+println(range(1,2))

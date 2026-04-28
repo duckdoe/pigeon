@@ -1,4 +1,5 @@
 # TODO: Implement a way to reassigning array values # TODO will not do now!
+# GOAL: Implement anonymous functions - These are expressions so the shouldn't be that hard
 
 from typing import List, Optional
 
@@ -42,37 +43,81 @@ class Parser:
                 return asts.BreakStmt("ContinueStmt")
             case TokenType.For:
                 return self.__parse_for_stmt()
+            case TokenType.Fn:
+                return self.__parse_function_declaration()
+            case TokenType.Return:
+                self.__eat_token()
+                return asts.ReturnStmt("ReturnStmt", self.__parse_expr())
             case _:
                 return self.__parse_expr()
-            
+
+    def __parse_function_declaration(self) -> asts.FunctionDeclaration:
+        self.__eat_token()  # eat 'fn' token
+
+        if self.__cur_token().type != TokenType.Ident:
+            raise SyntaxError(
+                f"Expected an identifier, got '{self.__cur_token().value}' instead"
+            )
+
+        symbol = self.__parse_primary(self.__eat_token())
+
+        if self.__eat_token().type != TokenType.Lparen:
+            raise SyntaxError(f"Expected '(' got '{self.__cur_token().value}' instead")
+
+        params = self.__parse_args()
+
+        if self.__eat_token().type != TokenType.LBrace:
+            raise SyntaxError(
+                "Expected '{' got" + f"'{self.__cur_token().value}' instead"
+            )
+
+        body = []
+        while self.__cur_token().type != TokenType.RBrace and self.__not_eof():
+            body.append(self.__parse_stmt())
+
+        if self.__eat_token().type != TokenType.RBrace:
+            raise SyntaxError(
+                "Expected '}' got"
+                + f"'{self.__cur_token().value}' instead at {self.__cur_token().ln}"
+            )
+
+        return asts.FunctionDeclaration("FunctionDeclaration", symbol, params, body)
+
     def __parse_for_stmt(self) -> asts.ForStmt:
-        self.__eat_token() # eat 'for' token
+        self.__eat_token()  # eat 'for' token
         declaration = self.__parse_var_declaration_stmt()
 
         if self.__eat_token().type != TokenType.Colon:
-            raise SyntaxError(f"Unexpected token recieved, Expected ';' got '{self.__cur_token().value}'")
-        
+            raise SyntaxError(
+                f"Unexpected token recieved, Expected ';' got '{self.__cur_token().value}'"
+            )
+
         condition = self.__parse_expr()
 
         if self.__eat_token().type != TokenType.Colon:
-            raise SyntaxError(f"Unexpected token recieved, Expected ';' got '{self.__cur_token().value}'")
-        
+            raise SyntaxError(
+                f"Unexpected token recieved, Expected ';' got '{self.__cur_token().value}'"
+            )
+
         action = self.__parse_expr()
 
         if self.__eat_token().type != TokenType.LBrace:
-            raise SyntaxError("Unexpected token recieved, Expected '{'"+ f" got '{self.__cur_token().value}'")
-        
+            raise SyntaxError(
+                "Unexpected token recieved, Expected '{'"
+                + f" got '{self.__cur_token().value}'"
+            )
+
         body = []
         while self.__cur_token().type != TokenType.RBrace:
             body.append(self.__parse_stmt())
 
         if self.__eat_token().type != TokenType.RBrace:
-            raise SyntaxError("Unexpected token recieve, Expected '}'"+ f" got '{self.__cur_token().value}'")
-        
+            raise SyntaxError(
+                "Unexpected token recieve, Expected '}'"
+                + f" got '{self.__cur_token().value}'"
+            )
 
-
-        return asts.ForStmt("ForStmt",declaration, action, condition, body)
-
+        return asts.ForStmt("ForStmt", declaration, action, condition, body)
 
     def __parse_while_stmt(self) -> asts.Stmt:
         self.__eat_token()  # eat 'while' token

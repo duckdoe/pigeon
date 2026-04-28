@@ -1,4 +1,4 @@
-from errors import IllegalBreakError, IllegalContinueError
+from errors import IllegalBreakError, IllegalContinueError, IllegalReturnError
 from frontend.asts import (
     AssignmentExpr,
     BinaryExpr,
@@ -11,7 +11,7 @@ from frontend.asts import (
 )
 
 from .environment import Environment
-from .values import Array, Boolean, Null, Number, RuntimeValue, String
+from .values import Array, Boolean, Function, Null, Number, RuntimeValue, String
 
 
 class Intpereter:
@@ -39,6 +39,12 @@ class Intpereter:
             and node.operator.value in ("-", "*", "+", "/", "%")
         ):
             return self.__eval_arithmetic(left, right, node.operator)
+        elif (
+            left.type == "string"
+            and right.type == "string"
+            and node.operator.value == "+"
+        ):
+            return String("string", left.value + right.value)  # type: ignore
         elif (
             left.type == "number"
             and right.type == "number"
@@ -192,11 +198,38 @@ class Intpereter:
 
             return Null("null")
 
-    def __eval_call_expr(self, node, env: Environment):
+    def __eval_call_expr(self, node, env: Environment) -> RuntimeValue:
         fn = self.__evaluate_node(node.caller, env)
         args = [self.__evaluate_node(arg, env) for arg in node.args]
 
-        return fn.call(args)  # type: ignore # this only works for native functions for now
+        if fn.type == "nativefn":
+            return fn.call(args)  # type: ignore # this only works for native functions for now
+        else:
+            return self.__eval_function_call(args, fn)  # type: ignore
+
+    def __eval_function_call(self, args, fn: Function) -> RuntimeValue:
+        if len(args) != len(fn.params):
+            raise TypeError(
+                f"Expected {len(fn.params)} argumentss, got {len(fn.params)} instead"
+            )
+
+        for i in range(len(args)):
+            fn.declaration_env.declare_var(fn.params[i].symbol.value, args[i], False)
+
+        should_return = False
+
+        for i in range(len(fn.call)):
+            try:
+                self.__evaluate_node(fn.call[i], fn.declaration_env)
+            except IllegalReturnError as e:
+                return_val = e.args[1]
+                should_return = True
+                break
+
+        if should_return:
+            return self.__evaluate_node(return_val.value, fn.declaration_env)  # type: ignore
+
+        return Null("null")
 
     def __eval_member_expr(self, node: MemberExpr, env: Environment) -> RuntimeValue:
         if node.computed:
@@ -253,7 +286,7 @@ class Intpereter:
         if condition.type != "boolean":
             raise TypeError("Condition must be of type boolean")
 
-        while self.__evaluate_node(node.condition, scope).value == "true": # type: ignore
+        while self.__evaluate_node(node.condition, scope).value == "true":  # type: ignore
             stop = False
 
             for n in node.body:
@@ -270,6 +303,19 @@ class Intpereter:
 
             self.__evaluate_node(node.action, scope)
 
+        return Null("null")
+
+    def __eval_function_declaration(self, node, env: Environment) -> RuntimeValue:
+        name = node.symbol.symbol.value
+
+        for param in node.params:
+            if param.kind != "Identifier":
+                raise SyntaxError(
+                    "Function parameters can only be of type 'identifiers'"
+                )
+
+        fn = Function("function", env, node.params, node.body)
+        env.parent.declare_var(name, fn, True)  # type: ignore
         return Null("null")
 
     def __evaluate_node(self, node: Stmt, env: Environment) -> RuntimeValue:
@@ -306,13 +352,22 @@ class Intpereter:
             case "MemberExpr":
                 return self.__eval_member_expr(node, env)  # type: ignore
             case "BreakStmt":
-                raise IllegalBreakError("Illegal 'break' statement found")
+                raise IllegalBreakError("'break' statements can only exist in groups")
             case "ContinueStmt":
-                raise IllegalContinueError("Illegal 'continue' statement found")
+                raise IllegalContinueError(
+                    "'continue' statements can only exist in loops"
+                )
             case "WhileStmt":
                 return self.__eval_while_stmt(node, env)
             case "ForStmt":
                 scope = Environment(env)
                 return self.__eval_for_stmt(node, scope)
+            case "FunctionDeclaration":
+                scope = Environment(env)
+                return self.__eval_function_declaration(node, scope)
+            case "ReturnStmt":
+                raise IllegalReturnError(
+                    "'return' statements can only exist in functions", node
+                )
             case _:
                 raise Exception(f"Unexpected Error while evaluating {node}")

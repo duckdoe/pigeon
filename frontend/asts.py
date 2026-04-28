@@ -24,6 +24,8 @@ NodeType = Literal[
     "ContinueStmt",
     "PostFixExpr",
     "ForStmt",
+    "FunctionDeclaration",
+    "ReturnStmt"
 ]
 
 
@@ -85,6 +87,16 @@ class BreakStmt(Stmt):
 @dataclass
 class ContinueStmt(Stmt):
     pass
+
+@dataclass
+class ReturnStmt(Stmt):
+    value: Expr
+
+@dataclass
+class FunctionDeclaration(Stmt):
+    symbol: Expr
+    params: List[Expr]
+    body: List[Stmt]
 
 
 @dataclass

@@ -3,6 +3,7 @@ from enum import Enum, auto
 
 
 class TokenType(Enum):
+    Fn = auto()
     If = auto()
     Or = auto()
     And = auto()
@@ -58,5 +59,6 @@ keywords = {
     "continue": TokenType.Continue,
     "return": TokenType.Return,
     "while": TokenType.While,
-    "for": TokenType.For
+    "for": TokenType.For,
+    "fn": TokenType.Fn
 }

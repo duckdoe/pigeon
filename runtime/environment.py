@@ -1,12 +1,7 @@
-from typing import Dict
-
-from .values import RuntimeValue
-
-
 class Environment:
     def __init__(self, parent=None):
-        self.parent = parent
-        self.variables: Dict[str, RuntimeValue] = {}
+        self.parent: Environment | None = parent
+        self.variables = {}
         self.constants = set()
 
     def resolve(self, key):
@@ -18,18 +13,18 @@ class Environment:
 
         return self.parent.resolve(key)
 
-    def look_up_var(self, key) -> RuntimeValue:
+    def look_up_var(self, key):
         env = self.resolve(key)
 
         return env.variables[key]
 
-    def assign_var(self, key, value: RuntimeValue):
+    def assign_var(self, key, value):
         if key not in self.variables:
             raise Exception(f"Cannot assign variable '{key}' as it does not exist yet")
 
         self.variables[key] = value
 
-    def declare_var(self, key, value: RuntimeValue, constant: bool):
+    def declare_var(self, key, value, constant: bool):
         if constant:
             self.constants.add(key)
 

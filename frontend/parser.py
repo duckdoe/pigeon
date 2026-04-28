@@ -1,6 +1,3 @@
-# TODO: Implement a way to reassigning array values # TODO will not do now!
-# GOAL: Implement anonymous functions - These are expressions so the shouldn't be that hard
-
 from typing import List, Optional
 
 from . import asts
@@ -260,8 +257,7 @@ class Parser:
         lhs = self.__parse_array_expr()
 
         if (
-            lhs.kind == "Identifier"
-            and self.__cur_token().type == TokenType.Assign
+            self.__cur_token().type == TokenType.Assign
             or self.__cur_token().value in ("+=", "-=", "/=", "*=", "%=")
             or self.__cur_token().type is TokenType.PostFix
         ):
@@ -274,7 +270,7 @@ class Parser:
 
             rhs = self.__parse_expr()
 
-            return asts.AssignmentExpr("AssignmentExpr", lhs.symbol, rhs)  # type: ignore
+            return asts.AssignmentExpr("AssignmentExpr", lhs, rhs)  # type: ignore
 
         return lhs
 
@@ -283,10 +279,10 @@ class Parser:
             self.__eat_token()
             result = asts.AssignmentExpr(
                 "AssignmentExpr",
-                left.symbol,
+                left,
                 asts.BinaryExpr(
                     "BinExpr",
-                    self.__parse_primary(left.symbol),
+                    self.__parse_primary(left),
                     Token(TokenType.BinOp, "+", self.__cur_token().ln),
                     asts.NumericLiteral("NumericLiteral", 1.0),
                 ),
@@ -295,10 +291,10 @@ class Parser:
             self.__eat_token()
             result = asts.AssignmentExpr(
                 "AssignmentExpr",
-                left.symbol,
+                left,
                 asts.BinaryExpr(
                     "BinExpr",
-                    self.__parse_primary(left.symbol),
+                    self.__parse_primary(left),
                     Token(TokenType.BinOp, "-", self.__cur_token().ln),
                     asts.NumericLiteral("NumericLiteral", 1.0),
                 ),
@@ -312,10 +308,10 @@ class Parser:
 
             result = asts.AssignmentExpr(
                 "AssignmentExpr",
-                left.symbol,
+                left,
                 asts.BinaryExpr(
                     "BinExpr",
-                    self.__parse_primary(left.symbol),
+                    self.__parse_primary(left),
                     Token(TokenType.BinOp, "+", self.__cur_token().ln),
                     self.__parse_expr(),
                 ),
@@ -325,10 +321,10 @@ class Parser:
 
             result = asts.AssignmentExpr(
                 "AssignmentExpr",
-                left.symbol,
+                left,
                 asts.BinaryExpr(
                     "BinExpr",
-                    self.__parse_primary(left.symbol),
+                    self.__parse_primary(left),
                     Token(TokenType.BinOp, "-", self.__cur_token().ln),
                     self.__parse_expr(),
                 ),
@@ -341,7 +337,7 @@ class Parser:
                 left.symbol,
                 asts.BinaryExpr(
                     "BinExpr",
-                    self.__parse_primary(left.symbol),
+                    self.__parse_primary(left),
                     Token(TokenType.BinOp, "/", self.__cur_token().ln),
                     self.__parse_expr(),
                 ),
@@ -354,7 +350,7 @@ class Parser:
                 left.symbol,
                 asts.BinaryExpr(
                     "BinExpr",
-                    self.__parse_primary(left.symbol),
+                    self.__parse_primary(left),
                     Token(TokenType.BinOp, "*", self.__cur_token().ln),
                     self.__parse_expr(),
                 ),
@@ -367,7 +363,7 @@ class Parser:
                 left.symbol,
                 asts.BinaryExpr(
                     "BinExpr",
-                    self.__parse_primary(left.symbol),
+                    self.__parse_primary(left),
                     Token(TokenType.BinOp, "%", self.__cur_token().ln),
                     self.__parse_expr(),
                 ),

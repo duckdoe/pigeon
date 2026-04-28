@@ -163,16 +163,35 @@ class Intpereter:
 
         return Null("null")
 
-    def __eval_var_assignment(
+    def __eval_assignment_expr(
         self, node: AssignmentExpr, env: Environment
     ) -> RuntimeValue:
         value = self.__evaluate_node(node.value, env)
-        if node.symbol.value in env.constants:
-            raise TypeError(
-                f"Cannot reassign constant variable {node.symbol.value} at [ln: {node.symbol.ln}]"
-            )
 
-        env.assign_var(node.symbol.value, value)
+        if node.symbol.kind == "Identifier":
+            if node.symbol.symbol.value in env.constants:  # type: ignore
+                raise TypeError(
+                    f"Cannot reassign constant variable {node.symbol.symbol.value} at [ln: {node.symbol.ln}]"  # type: ignore
+                )
+
+        elif node.symbol.kind == "MemberExpr":
+            index = node.symbol.property.value  # type: ignore
+            name = node.symbol.object.symbol.value  # type: ignore
+            object = env.look_up_var(name)
+
+            if object.type == "array":
+                print("Hello!")
+                object.value[int(index)] = self.__evaluate_node(node.value, env)  # type: ignore
+
+            return object.value[int(index)]
+
+            # node.symbol == "MemberExpr",
+            # if 'MemberExpr' need to reassign to the rhs value,
+            # first check if it is an array,
+            # then check if the array index is correct
+            # and just reassign the array property to the value on the rhs
+
+        env.assign_var(node.symbol.value, value)  # type: ignore
         return value
 
     def __eval_if_statement(self, node, env: Environment) -> RuntimeValue:
@@ -348,7 +367,7 @@ class Intpereter:
             case "VarDeclaration":
                 return self.__eval_var_declaration(node, env)
             case "AssignmentExpr":
-                return self.__eval_var_assignment(node, env)  # type: ignore
+                return self.__eval_assignment_expr(node, env)  # type: ignore
             case "IfStatement":
                 return self.__eval_if_statement(node, env)
             case "CallExpr":

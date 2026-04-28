@@ -1,8 +1,6 @@
-let array = [fn (name) {
-    return ("Hello " + name)
-}]
+let nums = [1,2,3]
 
-let greet = array[0]
-let greeting = greet("fortune")
+let number2 = nums[1] = 3
 
-println(greeting)
+println(number2)
+println(nums)

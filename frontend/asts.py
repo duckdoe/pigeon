@@ -102,7 +102,7 @@ class FunctionDeclaration(Stmt):
 
 @dataclass
 class AssignmentExpr(Expr):
-    symbol: Token
+    symbol: Expr
     value: Expr
 
 

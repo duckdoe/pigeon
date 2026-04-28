@@ -1,6 +1,18 @@
 let num = 10
 
-while num > 0 {
-    num--
-    println(num)
+// while num > 0 {
+//    num--
+//    println(num)
+// }
+
+let i = 2
+
+for let i = 0; i <= 10; i++{ // for loops will have to be lexically scoped to avoid polluting the global scope
+    if i == 4 {
+        break
+    }
+
+    println(i)
 }
+
+println(i)

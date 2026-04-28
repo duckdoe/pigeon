@@ -1,4 +1,5 @@
 # TODO: Implement a way to reassigning array values # TODO will not do now!
+# TODO: Implement for loops
 
 from typing import List, Optional
 
@@ -40,8 +41,39 @@ class Parser:
             case TokenType.Continue:
                 self.__eat_token()
                 return asts.BreakStmt("ContinueStmt")
+            case TokenType.For:
+                return self.__parse_for_stmt()
             case _:
                 return self.__parse_expr()
+            
+    def __parse_for_stmt(self) -> asts.ForStmt:
+        self.__eat_token() # eat 'for' token
+        declaration = self.__parse_var_declaration_stmt()
+
+        if self.__eat_token().type != TokenType.Colon:
+            raise SyntaxError(f"Unexpected token recieved, Expected ';' got '{self.__cur_token().value}'")
+        
+        condition = self.__parse_expr()
+
+        if self.__eat_token().type != TokenType.Colon:
+            raise SyntaxError(f"Unexpected token recieved, Expected ';' got '{self.__cur_token().value}'")
+        
+        action = self.__parse_expr()
+
+        if self.__eat_token().type != TokenType.LBrace:
+            raise SyntaxError("Unexpected token recieved, Expected '{'"+ f" got '{self.__cur_token().value}'")
+        
+        body = []
+        while self.__cur_token().type != TokenType.RBrace:
+            body.append(self.__parse_stmt())
+
+        if self.__eat_token().type != TokenType.RBrace:
+            raise SyntaxError("Unexpected token recieve, Expected '}'"+ f" got '{self.__cur_token().value}'")
+        
+        
+
+        return asts.ForStmt("ForStmt",declaration, action, condition, body)
+
 
     def __parse_while_stmt(self) -> asts.Stmt:
         # I have no fucking idea what to do 😭

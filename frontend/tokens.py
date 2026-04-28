@@ -8,12 +8,14 @@ class TokenType(Enum):
     And = auto()
     Dot = auto()
     Eof = auto()
+    For = auto()
     Let = auto()
     Null = auto()
     Bang = auto()
     Bool = auto()
     Else = auto()
     Comma = auto()
+    Colon = auto()
     Const = auto()
     BinOp = auto()
     Ident = auto()
@@ -56,4 +58,5 @@ keywords = {
     "continue": TokenType.Continue,
     "return": TokenType.Return,
     "while": TokenType.While,
+    "for": TokenType.For
 }

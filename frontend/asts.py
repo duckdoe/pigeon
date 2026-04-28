@@ -23,6 +23,7 @@ NodeType = Literal[
     "BreakStmt",
     "ContinueStmt",
     "PostFixExpr",
+    "ForStmt",
 ]
 
 

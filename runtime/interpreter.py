@@ -245,6 +245,33 @@ class Intpereter:
 
         return Null("null")
 
+    def __eval_for_stmt(self, node, scope: Environment) -> RuntimeValue:
+        self.__evaluate_node(node.declaration, scope)
+
+        condition = self.__evaluate_node(node.condition, scope)
+
+        if condition.type != "boolean":
+            raise TypeError("Condition must be of type boolean")
+
+        while self.__evaluate_node(node.condition, scope).value == "true":
+            stop = False
+
+            for n in node.body:
+                try:
+                    self.__evaluate_node(n, scope)
+                except IllegalBreakError:
+                    stop = True
+                    break
+                except IllegalContinueError:
+                    break
+
+            if stop is True:
+                break
+
+            self.__evaluate_node(node.action, scope)
+
+        return Null("null")
+
     def __evaluate_node(self, node: Stmt, env: Environment) -> RuntimeValue:
         match node.kind:
             case "Program":
@@ -284,5 +311,8 @@ class Intpereter:
                 raise IllegalContinueError("Illegal 'continue' statement found")
             case "WhileStmt":
                 return self.__eval_while_stmt(node, env)
+            case "ForStmt":
+                scope = Environment(env)
+                return self.__eval_for_stmt(node, scope)
             case _:
                 raise Exception(f"Unexpected Error while evaluating {node}")

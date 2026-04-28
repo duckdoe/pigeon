@@ -253,7 +253,7 @@ class Intpereter:
         if condition.type != "boolean":
             raise TypeError("Condition must be of type boolean")
 
-        while self.__evaluate_node(node.condition, scope).value == "true":
+        while self.__evaluate_node(node.condition, scope).value == "true": # type: ignore
             stop = False
 
             for n in node.body:

@@ -1,5 +1,4 @@
 # TODO: Implement a way to reassigning array values # TODO will not do now!
-# TODO: Implement for loops
 
 from typing import List, Optional
 
@@ -70,13 +69,12 @@ class Parser:
         if self.__eat_token().type != TokenType.RBrace:
             raise SyntaxError("Unexpected token recieve, Expected '}'"+ f" got '{self.__cur_token().value}'")
         
-        
+
 
         return asts.ForStmt("ForStmt",declaration, action, condition, body)
 
 
     def __parse_while_stmt(self) -> asts.Stmt:
-        # I have no fucking idea what to do 😭
         self.__eat_token()  # eat 'while' token
         condition = self.__parse_expr()
 

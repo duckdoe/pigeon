@@ -1,7 +1,5 @@
 # TODO: Implement a way to reassigning array values # TODO will not do now!
 
-# TODO: Implement shorthand binary expressions, and also support postincrement and postdecrement operations
-
 from typing import List, Optional
 
 from . import asts
@@ -165,9 +163,12 @@ class Parser:
             lhs.kind == "Identifier"
             and self.__cur_token().type == TokenType.Assign
             or self.__cur_token().value in ("+=", "-=", "/=", "*=", "%=")
+            or self.__cur_token().type is TokenType.PostFix
         ):
             if self.__cur_token().type == TokenType.BinOp:
                 return self.__parse_shorthand_binexpr(lhs)
+            elif self.__cur_token().type == TokenType.PostFix:
+                return self.__parse_postfix_expr(lhs)
 
             self.__eat_token()  # eat '=' token
 
@@ -176,6 +177,34 @@ class Parser:
             return asts.AssignmentExpr("AssignmentExpr", lhs.symbol, rhs)  # type: ignore
 
         return lhs
+
+    def __parse_postfix_expr(self, left) -> asts.AssignmentExpr:
+        if self.__cur_token().value == "++":
+            self.__eat_token()
+            result = asts.AssignmentExpr(
+                "AssignmentExpr",
+                left.symbol,
+                asts.BinaryExpr(
+                    "BinExpr",
+                    self.__parse_primary(left.symbol),
+                    Token(TokenType.BinOp, "+", self.__cur_token().ln),
+                    asts.NumericLiteral("NumericLiteral", 1.0),
+                ),
+            )
+        else:
+            self.__eat_token()
+            result = asts.AssignmentExpr(
+                "AssignmentExpr",
+                left.symbol,
+                asts.BinaryExpr(
+                    "BinExpr",
+                    self.__parse_primary(left.symbol),
+                    Token(TokenType.BinOp, "-", self.__cur_token().ln),
+                    asts.NumericLiteral("NumericLiteral", 1.0),
+                ),
+            )
+
+        return result
 
     def __parse_shorthand_binexpr(self, left) -> asts.AssignmentExpr:
         if self.__cur_token().value == "+=":
@@ -377,7 +406,7 @@ class Parser:
 
         if self.__cur_token().type != TokenType.Rparen:
             raise SyntaxError(
-                f"Unclosed parethesis during function call at [ln: {self.__cur_token().ln}]"
+                f"Syntax Error expected ')', got '{self.__cur_token().value}' during function call instead at [ln: {self.__cur_token().ln}]"
             )
 
         self.__eat_token()  # eats ')' token

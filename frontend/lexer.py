@@ -43,6 +43,13 @@ class Lexer:
 
                     self.__advance()  # leaves the second '='
                     return token
+                elif self.pos < len(self.input) - 1 and self.input[self.pos + 1] == "-":
+                    self.__advance()  # "moves to the second equals"
+                    token = Token(TokenType.PostFix, "--", self.line)
+
+                    self.__advance()  # leaves the second '='
+                    return token
+                
                 token = Token(TokenType.BinOp, self.char, self.line)
             case "*":
                 if self.pos < len(self.input) - 1 and self.input[self.pos + 1] == "=":
@@ -74,6 +81,14 @@ class Lexer:
 
                     self.__advance()  # leaves the second '='
                     return token
+                
+                elif self.pos < len(self.input) - 1 and self.input[self.pos + 1] == "+":
+                    self.__advance()  # "moves to the second equals"
+                    token = Token(TokenType.PostFix, "++", self.line)
+
+                    self.__advance()  # leaves the second '='
+                    return token
+                
                 token = Token(TokenType.BinOp, self.char, self.line)
             case "%":
                 if self.pos < len(self.input) - 1 and self.input[self.pos + 1] == "=":

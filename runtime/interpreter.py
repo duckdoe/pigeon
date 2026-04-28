@@ -229,7 +229,7 @@ class Intpereter:
 
     def __eval_while_stmt(self, node, env: Environment) -> RuntimeValue:
         # print(self.__evaluate_node(node.condition, env))
-        while self.__evaluate_node(node.condition, env).value == "true": # type: ignore
+        while self.__evaluate_node(node.condition, env).value == "true":  # type: ignore
             stop = False
             for n in node.body:
                 try:

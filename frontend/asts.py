@@ -21,7 +21,8 @@ NodeType = Literal[
     "MemberExpr",
     "WhileStmt",
     "BreakStmt",
-    "ContinueStmt"
+    "ContinueStmt",
+    "PostFixExpr",
 ]
 
 
@@ -66,12 +67,14 @@ class WhileStmt(Stmt):
     condition: Expr
     body: List[Stmt]
 
+
 @dataclass
 class ForStmt(Stmt):
     declaration: VarDeclaration
-    action: Expr # Couldn't find a better name but i think it is descriptive enough, just means what the for loop does after it has ran the body
+    action: Expr  # Couldn't find a better name but i think it is descriptive enough, just means what the for loop does after it has ran the body
     condition: Expr
     body: List[Stmt]
+
 
 @dataclass
 class BreakStmt(Stmt):

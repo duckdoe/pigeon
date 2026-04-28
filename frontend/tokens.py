@@ -31,12 +31,7 @@ class TokenType(Enum):
     Assign = auto()
     Equals = auto()
     Return = auto()
-    PostI = (
-        auto()
-    )  # means 'postincrement' -> '++' i was too tired to come up with something more expressive
-    PostD = (
-        auto()
-    )  # means 'postdecrement'-> '--' i was too tired to come up with something more expressive
+    PostFix = auto()  # '--' or '++'
     Continue = auto()
 
 

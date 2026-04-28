@@ -1,5 +1,6 @@
-let name = 1
-println(name)
+let num = 10
 
-name += 3 + 2
-println(name)
+while num > 0 {
+    num--
+    println(num)
+}

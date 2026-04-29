@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Literal
+from typing import List, Literal, Optional
 
 from .tokens import Token
 
@@ -26,7 +26,9 @@ NodeType = Literal[
     "ForStmt",
     "FunctionDeclaration",
     "ReturnStmt",
-    "FunctionExpr"
+    "FunctionExpr",
+    "MapLiteral",
+    "Property",
 ]
 
 
@@ -89,15 +91,23 @@ class BreakStmt(Stmt):
 class ContinueStmt(Stmt):
     pass
 
+
 @dataclass
 class ReturnStmt(Stmt):
     value: Expr
+
 
 @dataclass
 class FunctionDeclaration(Stmt):
     symbol: Expr
     params: List[Expr]
     body: List[Stmt]
+
+
+@dataclass
+class Property(Stmt):
+    key: Token
+    value: Optional[Expr]
 
 
 @dataclass
@@ -163,7 +173,13 @@ class MemberExpr(Expr):
     property: Expr
     computed: bool
 
+
 @dataclass
 class FunctionExpr(Expr):
     params: List[Expr]
     body: List[Stmt]
+
+
+@dataclass
+class MapLiteral(Expr):
+    properties: List[Property]

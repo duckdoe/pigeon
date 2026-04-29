@@ -1,5 +1,7 @@
 from typing import List
-from runtime.values import RuntimeValue, String, Number, Null
+
+from runtime.values import Null, Number, RuntimeValue, String
+
 
 def printlnfn(args: List[RuntimeValue]) -> Null:
     result = ""
@@ -15,6 +17,21 @@ def printlnfn(args: List[RuntimeValue]) -> Null:
 
             result += return_string(arg.value[-1]) + "]"  # type: ignore
 
+            return result
+        elif arg.type == "string":
+            result = '"'
+            result += arg.value  # type: ignore
+            result += '"'
+            return result
+        elif arg.type == "map":
+            result = "{"
+
+            for key, value in arg.properties.items():  # type: ignore
+                result += key + ": " + return_string(value) + ", "
+
+            result = result[0:-2]
+            result += "}"
+            print(result)
             return result
         else:
             return str(arg.value)  # type: ignore
@@ -58,7 +75,8 @@ def formatfn(args: List[RuntimeValue]) -> String:
                 len(args),
                 fstring,
             )
-        string = string.replace("{}", args.pop(0).value)  # type: ignore
+        
+        string = string.replace("{}", str(args.pop(0).value), 1)  # type: ignore
 
     return String("string", string)
 

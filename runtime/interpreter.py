@@ -11,7 +11,7 @@ from frontend.asts import (
 )
 
 from .environment import Environment
-from .values import Array, Boolean, Function, Null, Number, RuntimeValue, String
+from .values import Array, Boolean, Function, Map, Null, Number, RuntimeValue, String
 
 
 class Intpereter:
@@ -173,6 +173,8 @@ class Intpereter:
                 raise TypeError(
                     f"Cannot reassign constant variable {node.symbol.symbol.value} at [ln: {node.symbol.ln}]"  # type: ignore
                 )
+            env.assign_var(node.symbol.symbol.value, value)  # type: ignore
+            return value
 
         elif node.symbol.kind == "MemberExpr":
             index = node.symbol.property.value  # type: ignore
@@ -180,7 +182,6 @@ class Intpereter:
             object = env.look_up_var(name)
 
             if object.type == "array":
-                print("Hello!")
                 object.value[int(index)] = self.__evaluate_node(node.value, env)  # type: ignore
 
             return object.value[int(index)]
@@ -259,12 +260,35 @@ class Intpereter:
                 return self.__eval_array_member(object, property)
             else:
                 raise TypeError(
-                    f"Cannot perform member call on object of type '{object.type}"
+                    f"value of type {object.type} is not subscriptable"
+                    + f"try {object.value}.{property.value}"  # type: ignore
+                    if object.type == "map"
+                    else ""
                 )
         else:
-            return Null(
-                "null"
-            )  # I have no idea why this is here but i think i need it.
+            object = self.__evaluate_node(node.object, env)
+
+            if node.property.kind == "CallExpr":
+                key = node.property.caller.symbol.value  # type: ignore
+
+                if key not in object.properties:  # type: ignore
+                    raise KeyError(
+                        f"'{key}' does not exist as a property in {node.object}"
+                    )
+
+                fn = object.properties[key]  # type: ignore
+
+                if fn.type != "function":
+                    raise Exception(f"Cannot call '{key}' as it is not a function")
+
+                return self.__eval_function_call(node.property.args, fn)  # type: ignore
+
+            if node.property.kind != "Identifier":
+                raise Exception("This is an error")
+
+            property = node.property.symbol.value  # type: ignore
+
+            return object.properties[property]  # type: ignore
 
     def __eval_array_member(self, object, property):
         remainder = property.value % 1
@@ -280,7 +304,6 @@ class Intpereter:
         return object.value[int(property.value)]
 
     def __eval_while_stmt(self, node, env: Environment) -> RuntimeValue:
-        # print(self.__evaluate_node(node.condition, env))
         while self.__evaluate_node(node.condition, env).value == "true":  # type: ignore
             stop = False
             for n in node.body:
@@ -346,6 +369,26 @@ class Intpereter:
 
         return Function("function", env, node.params, node.body)
 
+    def __eval_object_expr(self, node, env: Environment) -> RuntimeValue:
+        map = {}
+        for property in node.properties:
+            key = property.key.value
+
+            if property.value is None:
+                try:
+                    value = env.look_up_var(key)
+                except Exception:
+                    value = Null("null")
+
+                map.update({key: value})
+                continue
+
+            value = self.__evaluate_node(property.value, env)
+
+            map.update({key: value})
+
+        return Map("map", map)
+
     def __evaluate_node(self, node: Stmt, env: Environment) -> RuntimeValue:
         match node.kind:
             case "Program":
@@ -400,5 +443,7 @@ class Intpereter:
             case "FunctionExpr":
                 scope = Environment(env)
                 return self.__eval_function_expr(node, scope)
+            case "MapLiteral":
+                return self.__eval_object_expr(node, env)
             case _:
                 raise Exception(f"Unexpected Error while evaluating {node}")

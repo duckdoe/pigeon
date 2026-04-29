@@ -84,14 +84,14 @@ class Parser:
         self.__eat_token()  # eat 'for' token
         declaration = self.__parse_var_declaration_stmt()
 
-        if self.__eat_token().type != TokenType.Colon:
+        if self.__eat_token().type != TokenType.SemiColon:
             raise SyntaxError(
                 f"Unexpected token recieved, Expected ';' got '{self.__cur_token().value}'"
             )
 
         condition = self.__parse_expr()
 
-        if self.__eat_token().type != TokenType.Colon:
+        if self.__eat_token().type != TokenType.SemiColon:
             raise SyntaxError(
                 f"Unexpected token recieved, Expected ';' got '{self.__cur_token().value}'"
             )
@@ -235,12 +235,12 @@ class Parser:
         self.__eat_token()  # eat the 'fn' token
 
         if self.__eat_token().type != TokenType.Lparen:
-            raise Exception(f"Expected '(' got '{self.__cur_token().value}'")
+            raise Exception(f"Expected '(' got '{self.__cur_token().value}' at [ln: {self.__cur_token().ln}]")
 
         params = self.__parse_args()
 
         if self.__eat_token().type != TokenType.LBrace:
-            raise Exception("Expected '{' got " + f"'{self.__cur_token().value}'")
+            raise Exception("Expected '{' got " + f"'{self.__cur_token().value}' as function declarations cannot as expressions and return no value")
 
         body = []
         while self.__cur_token().type != TokenType.RBrace:
@@ -282,7 +282,7 @@ class Parser:
                 left,
                 asts.BinaryExpr(
                     "BinExpr",
-                    self.__parse_primary(left),
+                    self.__parse_primary(left.symbol),
                     Token(TokenType.BinOp, "+", self.__cur_token().ln),
                     asts.NumericLiteral("NumericLiteral", 1.0),
                 ),
@@ -294,7 +294,7 @@ class Parser:
                 left,
                 asts.BinaryExpr(
                     "BinExpr",
-                    self.__parse_primary(left),
+                    self.__parse_primary(left.symbol.symbol),
                     Token(TokenType.BinOp, "-", self.__cur_token().ln),
                     asts.NumericLiteral("NumericLiteral", 1.0),
                 ),
@@ -311,7 +311,7 @@ class Parser:
                 left,
                 asts.BinaryExpr(
                     "BinExpr",
-                    self.__parse_primary(left),
+                    self.__parse_primary(left.symbol.symbol),
                     Token(TokenType.BinOp, "+", self.__cur_token().ln),
                     self.__parse_expr(),
                 ),
@@ -324,7 +324,7 @@ class Parser:
                 left,
                 asts.BinaryExpr(
                     "BinExpr",
-                    self.__parse_primary(left),
+                    self.__parse_primary(left.symbol.symbol),
                     Token(TokenType.BinOp, "-", self.__cur_token().ln),
                     self.__parse_expr(),
                 ),
@@ -337,7 +337,7 @@ class Parser:
                 left.symbol,
                 asts.BinaryExpr(
                     "BinExpr",
-                    self.__parse_primary(left),
+                    self.__parse_primary(left.symbol.symbol),
                     Token(TokenType.BinOp, "/", self.__cur_token().ln),
                     self.__parse_expr(),
                 ),
@@ -373,7 +373,7 @@ class Parser:
 
     def __parse_array_expr(self) -> asts.Expr:
         if self.__cur_token().type != TokenType.Lbrack:
-            return self.__parse_or_expr()
+            return self.__parse_object_expr()
 
         self.__eat_token()  # eat '[' token
         properties = [self.__parse_expr()]
@@ -394,6 +394,59 @@ class Parser:
         array = asts.ArrayLiteral("ArrayLiteral", properties)
 
         return array
+
+    def __parse_object_expr(self) -> asts.Expr:
+        if self.__cur_token().type != TokenType.LBrace:
+            return self.__parse_or_expr()  # type: ignore
+
+        properties: List[asts.Property] = []
+
+        while self.__not_eof() and self.__cur_token().type != TokenType.RBrace:
+            self.__eat_token()
+
+            key = self.__eat_token()
+
+            if key.type != TokenType.Ident:
+                raise TypeError(
+                    f"key of maps can only be an identifier not '{self.__cur_token().type}'"
+                )
+
+            # Allow shorthand object expressions { key } {key, }
+
+            if self.__cur_token().type == TokenType.Comma:
+                self.__eat_token()  # consume the ',' token
+
+                properties.append(asts.Property("Property", key, None))
+                continue
+            elif self.__cur_token().type == TokenType.RBrace:
+                properties.append(asts.Property("Property", key, None))
+                continue
+
+            if self.__eat_token().type != TokenType.Colon:
+                raise SyntaxError(
+                    f"Expected ':' got '{self.__cur_token().value}' intead at [ln: {self.__cur_token().ln}]"
+                )
+
+            value = self.__parse_expr()
+
+            properties.append(asts.Property("Property", key, value))  # type: ignore
+
+            if (
+                self.__cur_token().type != TokenType.RBrace
+                and self.__cur_token().type != TokenType.Comma
+            ):
+                raise SyntaxError(
+                    "Expected ',' or '}' got"
+                    + f"'{self.__cur_token().value}' at [ln: {self.__cur_token().ln}]"
+                )
+
+        if self.__eat_token().type != TokenType.RBrace:
+            raise SyntaxError(
+                "Expected '}' got"
+                + f"'{self.__cur_token().value}' at [ln: {self.__cur_token().ln}]"
+            )
+
+        return asts.MapLiteral("MapLiteral", properties)
 
     def __parse_or_expr(self) -> asts.Expr:
 
@@ -471,13 +524,41 @@ class Parser:
             return asts.UnaryExpr(
                 "UnaryExpr",
                 self.__eat_token(),
-                self.__parse_call_expr(),
+                self.__parse_member_expr(),
             )
 
-        return self.__parse_call_expr()
+        return self.__parse_member_expr()
+
+    def __parse_member_expr(self) -> asts.Expr:
+        obj = self.__parse_call_expr()
+
+        while (
+            self.__cur_token().type == TokenType.Dot
+            or self.__cur_token().type == TokenType.Lbrack
+        ):
+            operator = self.__eat_token()
+
+            property: Optional[asts.Expr]
+            computed: bool
+
+            if operator.type == TokenType.Dot:
+                computed = False
+                property = self.__parse_call_expr()
+            else:
+                computed = True
+                property = self.__parse_expr()
+
+                if self.__eat_token().type != TokenType.Rbrack:
+                    raise SyntaxError(
+                        f"Unclosed '[' literal goten at [ln: {self.__cur_token().ln}]"
+                    )
+
+            obj = asts.MemberExpr("MemberExpr", obj, property, computed)  # type: ignore
+
+        return obj  # type: ignore
 
     def __parse_call_expr(self) -> asts.Expr:
-        caller = self.__parse_member_expr()
+        caller = self.__parse_primary(self.__eat_token())
         args = None
 
         while self.__cur_token().type == TokenType.Lparen:
@@ -508,40 +589,6 @@ class Parser:
         self.__eat_token()  # eats ')' token
 
         return args
-
-    def __parse_member_expr(self) -> asts.Expr:
-        obj = self.__parse_primary(self.__eat_token())
-
-        while (
-            self.__cur_token().type == TokenType.Dot
-            or self.__cur_token().type == TokenType.Lbrack
-        ):
-            operator = self.__eat_token()
-
-            property: Optional[asts.Expr]
-            computed: bool
-
-            if operator.type == TokenType.Dot:
-                computed = False
-                property = self.__parse_primary(self.__eat_token())
-                if property.kind != "Identifier":
-                    raise Exception(
-                        "Cannot use dot operator without right hand side being an identifier"
-                    )
-            else:
-                computed = True
-                property = self.__parse_expr()
-
-                if self.__eat_token().type != TokenType.Rbrack:
-                    raise SyntaxError(
-                        f"Unclosed '[' literal goten at [ln: {self.__cur_token().ln}]"
-                    )
-
-            obj = asts.MemberExpr("MemberExpr", obj, property, computed)  # type: ignore
-
-        return obj  # type: ignore
-
-        return obj
 
     def __parse_primary(self, token: Token) -> asts.Expr:
         match token.type:

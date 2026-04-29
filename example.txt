@@ -1,6 +1,8 @@
-let nums = [1,2,3]
+const person = {
+    name: "fortune",
+    ages: [17, 13]
+}
 
-let number2 = nums[1] = 3
+let about = format("Hello my name is {}, i am {} years old", person.name, person.ages[0])
 
-println(number2)
-println(nums)
+println(about)

@@ -36,6 +36,7 @@ class TokenType(Enum):
     Return = auto()
     PostFix = auto()  # '--' or '++'
     Continue = auto()
+    SemiColon = auto()
 
 
 @dataclass

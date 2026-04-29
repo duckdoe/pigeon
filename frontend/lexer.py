@@ -133,8 +133,10 @@ class Lexer:
 
                     return token
                 token = Token(TokenType.Bang, self.char, self.line)
-            case ";":
+            case ":":
                 token = Token(TokenType.Colon, self.char, self.line)
+            case ";":
+                token = Token(TokenType.SemiColon, self.char, self.line)
             case "(":
                 token = Token(TokenType.Lparen, self.char, self.line)
             case ")":

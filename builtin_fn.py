@@ -29,7 +29,7 @@ def to_numberfn(args: List[RuntimeValue]) -> Number:
     if args[0].type != "string":
         raise TypeError(f"Cannot convert type '{args[0].type}' to a number")
 
-    value = args[0].value # type: ignore
+    value = args[0].value  # type: ignore
 
     try:
         value = float(value)
@@ -39,22 +39,25 @@ def to_numberfn(args: List[RuntimeValue]) -> Number:
 
     raise TypeError(error)
 
+
 def to_stringfn(args: List[RuntimeValue]) -> String:
     if len(args) != 1:
         raise TypeError(f"Expected only one argument got {len(args)}")
-    
-    return String("string", str(args[0].value)) # type: ignore
+
+    return String("string", str(args[0].value))  # type: ignore
+
 
 def to_booleanfn(args: List[RuntimeValue]) -> Boolean:
     if len(args) != 1:
         raise TypeError(f"Expected only one argument got {len(args)}")
-    
-    arg = args[0]
-    if arg.type != "string" and arg.value not in ("true", "false"): # type: ignore
-        raise TypeError(f"Cannot convert type '{arg.type}' of value '{arg.value}' to a boolean datatype") # type: ignore
-    
-    return Boolean("boolean", arg.value) # type: ignore
 
+    arg = args[0]
+    if arg.type != "string" and arg.value not in ("true", "false"):  # type: ignore
+        raise TypeError(
+            f"Cannot convert type '{arg.type}' of value '{arg.value}' to a boolean datatype"
+        )  # type: ignore
+
+    return Boolean("boolean", arg.value)  # type: ignore
 
 
 def appendfn(args: List[RuntimeValue]) -> Array:
@@ -63,7 +66,7 @@ def appendfn(args: List[RuntimeValue]) -> Array:
 
     arr = args.pop(0)
 
-    arr = Array("array", arr.value)
+    arr = Array("array", arr.value)  # type: ignore
 
     if arr.type != "array":
         raise TypeError(f"Cannot append to {arr.type}")

@@ -1,8 +1,7 @@
-const person = {
-    name: "fortune",
-    ages: [17, 13]
+fn greeting(name){
+    return format("Hello {}", name)
 }
 
-let about = format("Hello my name is {}, i am {} years old", person.name, person.ages[0])
+const surname = "Foluso"
 
-println(about)
+println(greeting(format("Fortune {}", surname)))

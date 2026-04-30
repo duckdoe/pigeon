@@ -275,6 +275,9 @@ class Parser:
         return lhs
 
     def __parse_postfix_expr(self, left) -> asts.AssignmentExpr:
+        if left.kind != "MemberExpr" and left.kind != "Identifier":
+            raise TypeError("Cannot re-assign value")
+
         if self.__cur_token().value == "++":
             self.__eat_token()
             result = asts.AssignmentExpr(
@@ -527,10 +530,22 @@ class Parser:
                 self.__parse_member_expr(),
             )
 
-        return self.__parse_member_expr()
+        return self.__parse_call_expr()
+    
+    def __parse_call_expr(self) -> asts.Expr:
+        caller = self.__parse_member_expr()
+        args = None
+
+        while self.__cur_token().type == TokenType.Lparen:
+            self.__eat_token()
+            args = self.__parse_args()
+
+            caller = asts.CallExpr("CallExpr", caller, args)
+
+        return caller
 
     def __parse_member_expr(self) -> asts.Expr:
-        obj = self.__parse_call_expr()
+        obj = self.__parse_primary(self.__eat_token())
 
         while (
             self.__cur_token().type == TokenType.Dot
@@ -543,7 +558,7 @@ class Parser:
 
             if operator.type == TokenType.Dot:
                 computed = False
-                property = self.__parse_call_expr()
+                property = self.__parse_primary(self.__eat_token())
             else:
                 computed = True
                 property = self.__parse_expr()
@@ -556,18 +571,6 @@ class Parser:
             obj = asts.MemberExpr("MemberExpr", obj, property, computed)  # type: ignore
 
         return obj  # type: ignore
-
-    def __parse_call_expr(self) -> asts.Expr:
-        caller = self.__parse_primary(self.__eat_token())
-        args = None
-
-        while self.__cur_token().type == TokenType.Lparen:
-            self.__eat_token()
-            args = self.__parse_args()
-
-            caller = asts.CallExpr("CallExpr", caller, args)
-
-        return caller
 
     def __parse_args(self) -> List[asts.Expr]:
         args = (

@@ -2,6 +2,14 @@ from typing import List
 
 from runtime.values import Null, Number, RuntimeValue, String
 
+def timefn(args: List[RuntimeValue]) -> Number:
+    if args:
+        raise TypeError(f"Expected 0 arguments got {len(args)}")
+
+    from time import time
+
+    current_time = time()
+    return Number("number", current_time)
 
 def printlnfn(args: List[RuntimeValue]) -> Null:
     result = ""
@@ -33,6 +41,13 @@ def printlnfn(args: List[RuntimeValue]) -> Null:
             result += "}"
             print(result)
             return result
+        elif arg.type == "number":
+            number = arg.value # type: ignore
+
+            if number % 1 == 0:
+                return str(int(number))
+            
+            return str(number)
         else:
             return str(arg.value)  # type: ignore
 

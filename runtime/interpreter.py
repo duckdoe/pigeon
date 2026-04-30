@@ -163,12 +163,11 @@ class Intpereter:
 
         return Null("null")
 
-    def __eval_assignment_expr(
-        self, node: AssignmentExpr, env: Environment
-    ) -> RuntimeValue:
+    def __eval_assignment_expr(self, node: AssignmentExpr, env: Environment):
         value = self.__evaluate_node(node.value, env)
+        assignee: MemberExpr = node.symbol  # type: ignore
 
-        if node.symbol.kind == "Identifier":
+        if assignee.kind == "Identifier":
             if node.symbol.symbol.value in env.constants:  # type: ignore
                 raise TypeError(
                     f"Cannot reassign constant variable {node.symbol.symbol.value} at [ln: {node.symbol.ln}]"  # type: ignore
@@ -176,24 +175,68 @@ class Intpereter:
             env.assign_var(node.symbol.symbol.value, value)  # type: ignore
             return value
 
-        elif node.symbol.kind == "MemberExpr":
-            index = node.symbol.property.value  # type: ignore
-            name = node.symbol.object.symbol.value  # type: ignore
-            object = env.look_up_var(name)
+        elif assignee.kind == "MemberExpr":
+            # first need to destructure the ast node into something we can transverse over to reasign values
+            # we need the name of the member, meaning the one that binds the data structure
 
-            if object.type == "array":
-                object.value[int(index)] = self.__evaluate_node(node.value, env)  # type: ignore
+            """
+            The ideal datastructure should be a tuple, so if we have something like this, name.age.first, we should get
+            ('name', 'age', 'first'), where the first value is the variable
+            """
 
-            return object.value[int(index)]
+            return_val = []
 
-            # node.symbol == "MemberExpr",
-            # if 'MemberExpr' need to reassign to the rhs value,
-            # first check if it is an array,
-            # then check if the array index is correct
-            # and just reassign the array property to the value on the rhs
+            while assignee.kind == "MemberExpr":
+                return_val.append(
+                    assignee.property.symbol.value  # type: ignore
+                    if assignee.property.kind == "Identifier"
+                    else assignee.property.value  # type: ignore
+                )
+                assignee = assignee.object  # type: ignore
 
-        env.assign_var(node.symbol.value, value)  # type: ignore
-        return value
+            if assignee.kind == "NumericLiteral":
+                return_val.append(assignee.value)  # type: ignore
+            elif assignee.kind == "Identifier":
+                return_val.append(assignee.symbol.value)  # type: ignore
+
+            object = env.look_up_var(return_val.pop())
+
+            if object.type == "map":
+                while len(return_val) != 1:
+                    key = return_val.pop()
+
+                    if key not in object.properties:
+                        raise TypeError(f"Object does not have property {key}")
+
+                    object = object.properties.get(key)
+
+                if object.type == "map":
+                    object.properties[return_val.pop()] = value
+
+                elif object.type == "array":
+                    object.value[int(return_val.pop())] = value
+
+                return value
+            elif object.type == "array":
+                while len(return_val) != 1:
+                    key = return_val.pop()
+
+                    if key > len(object.value):
+                        raise TypeError(
+                            f"IndexError {key} is beyond the lenght of the array"
+                        )
+
+                    object = object.value[int(key)]
+
+                if object.type == "map":
+                    object.properties[return_val.pop()] = value
+
+                elif object.type == "array":
+                    object.value[int(return_val.pop())] = value
+
+                return value
+        else:
+            raise TypeError("Cannot assign")
 
     def __eval_if_statement(self, node, env: Environment) -> RuntimeValue:
         true = self.__evaluate_node(node.condition, env)

@@ -299,17 +299,26 @@ class Intpereter:
             object = self.__evaluate_node(node.object, env)
             property = self.__evaluate_node(node.property, env)
 
-            if property.type == "number" and object.type == "array":
-                return self.__eval_array_member(object, property)
-            else:
-                raise TypeError(
-                    f"value of type {object.type} is not subscriptable"
-                    + f"try {object.value}.{property.value}"  # type: ignore
-                    if object.type == "map"
-                    else ""
-                )
+            if property.type == "number":
+                if object.type == "array":
+                    return self.__eval_array_member(object, property)
+                elif object.type == "string":
+                    remainder = property.value % 1  # type: ignore
+
+                    if remainder != 0:
+                        raise TypeError(
+                            f"string indices must be an imterger value like '1' or '0' not {property.value}"  # type: ignore
+                        )
+
+                    return String("string", object.value[int(property.value)])  # type: ignore
+            raise TypeError(
+                f"value of type {object.type} is not subscriptable"  # type: ignore
+            )
         else:
             object = self.__evaluate_node(node.object, env)
+
+            if object.type != "map":
+                raise TypeError(f"cannot perform dot notation on type {object.type}")
 
             if node.property.kind == "CallExpr":
                 key = node.property.caller.symbol.value  # type: ignore
@@ -338,7 +347,7 @@ class Intpereter:
 
         if remainder != 0:
             raise TypeError(
-                f"Array Indices must be an imterger value like '1' or '0' not {property.value}"
+                f"array Indices must be an imterger value like '1' or '0' not {property.value}"
             )
 
         if len(object.value) < int(property.value):

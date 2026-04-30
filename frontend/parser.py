@@ -379,7 +379,7 @@ class Parser:
             return self.__parse_object_expr()
 
         self.__eat_token()  # eat '[' token
-        properties = [self.__parse_expr()]
+        properties = [self.__parse_expr()] if self.__cur_token().type != TokenType.Rbrack else []
 
         while (
             self.__cur_token().type == TokenType.Comma

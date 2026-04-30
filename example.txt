@@ -1,7 +1,4 @@
-fn greeting(name){
-    return format("Hello {}", name)
-}
+const name = "Fortune Foluso"
 
-const surname = "Foluso"
-
-println(greeting(format("Fortune {}", surname)))
+const first_letter = name[0]
+println(first_letter)

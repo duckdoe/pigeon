@@ -19,10 +19,12 @@ class Environment:
         return env.variables[key]
 
     def assign_var(self, key, value):
-        if key not in self.variables:
+        env = self.resolve(key)
+
+        if key not in env.variables:
             raise Exception(f"Cannot assign variable '{key}' as it does not exist yet")
 
-        self.variables[key] = value
+        env.variables[key] = value
 
     def declare_var(self, key, value, constant: bool):
         if constant:

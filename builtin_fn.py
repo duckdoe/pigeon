@@ -54,7 +54,7 @@ def to_booleanfn(args: List[RuntimeValue]) -> Boolean:
     arg = args[0]
     if arg.type != "string" and arg.value not in ("true", "false"):  # type: ignore
         raise TypeError(
-            f"Cannot convert type '{arg.type}' of value '{arg.value}' to a boolean datatype"
+            f"Cannot convert type '{arg.type}' of value '{arg.value}' to a boolean datatype"  # type: ignore
         )  # type: ignore
 
     return Boolean("boolean", arg.value)  # type: ignore
@@ -86,6 +86,9 @@ def return_string(arg: RuntimeValue):
         for i in range(len(arg.value) - 1):  # type: ignore
             result += return_string(arg.value[i]) + ", "  # type: ignore
 
+        if result == "[":
+            return "[]"
+
         result += return_string(arg.value[-1]) + "]"  # type: ignore
 
         return result
@@ -100,6 +103,8 @@ def return_string(arg: RuntimeValue):
         for key, value in arg.properties.items():  # type: ignore
             result += key + ": " + return_string(value) + ", "
 
+        if result == "{":
+            return "{}"
         result = result[0:-2]
         result += "}"
         print(result)

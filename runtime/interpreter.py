@@ -206,7 +206,7 @@ class Intpereter:
                     key = return_val.pop()
 
                     if key not in object.properties:
-                        raise TypeError(f"Object does not have property {key}")
+                        raise TypeError(f"Object does not have property {key} at {assignee.property.symbol.ln}") # typeL ignore
 
                     object = object.properties.get(key)
 
@@ -223,7 +223,7 @@ class Intpereter:
 
                     if key > len(object.value):
                         raise TypeError(
-                            f"IndexError {key} is beyond the lenght of the array"
+                            f"IndexError {key.value} is beyond the lenght of the array [ln:]"
                         )
 
                     object = object.value[int(key)]
@@ -235,8 +235,12 @@ class Intpereter:
                     object.value[int(return_val.pop())] = value
 
                 return value
+            else:
+                raise TypeError(
+                    f"Cannot assign '{object.type}' to right hand side value"
+                )
         else:
-            raise TypeError("Cannot assign")
+            raise TypeError(f"Cannot assign '{object.type}' to right hand side value") # type: ignore
 
     def __eval_if_statement(self, node, env: Environment) -> RuntimeValue:
         true = self.__evaluate_node(node.condition, env)

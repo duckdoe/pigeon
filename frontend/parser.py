@@ -403,9 +403,9 @@ class Parser:
             return self.__parse_or_expr()  # type: ignore
 
         properties: List[asts.Property] = []
+        self.__eat_token()
 
         while self.__not_eof() and self.__cur_token().type != TokenType.RBrace:
-            self.__eat_token()
 
             key = self.__eat_token()
 

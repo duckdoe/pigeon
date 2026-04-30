@@ -1,4 +1,8 @@
-const name = "Fortune Foluso"
+let name = "Fortune"
 
-const first_letter = name[0]
-println(first_letter)
+let i = 0
+
+while i < len(name){
+    println(name[i])
+    i++
+}

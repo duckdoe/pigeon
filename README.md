@@ -19,7 +19,7 @@ Linux & Mac
 
 You can edit the *example.pg* file if you want
 
-*If you can don't try to rid my code ;)*
+*If you can don't try to read my code ;)*
 
 
 ## Guide

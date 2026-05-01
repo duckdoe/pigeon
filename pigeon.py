@@ -1,4 +1,5 @@
 import sys
+from os import path
 
 from builtin_fn import (
     formatfn,
@@ -39,8 +40,19 @@ def run_program():
     try:
         _, file = sys.argv
 
+        ext = file.split('.')
+        if ext[-1] != 'pg':
+            print("Usage python pigeon.py [script].pg")
+            return
+        
+        if not path.exists(file):
+            print(f"Cannot open '{file}' as it does not exist")
+
         with open(file) as f:
             content = f.read()
+
+        if content.strip() == '':
+            return
 
         eval(content, env)
     except TypeError as e:

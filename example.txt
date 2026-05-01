@@ -1,8 +1,0 @@
-let name = "Fortune"
-
-let i = 0
-
-while i < len(name){
-    println(name[i])
-    i++
-}

@@ -297,7 +297,7 @@ class Parser:
                 left,
                 asts.BinaryExpr(
                     "BinExpr",
-                    self.__parse_primary(left.symbol.symbol),
+                    self.__parse_primary(left.symbol),
                     Token(TokenType.BinOp, "-", self.__cur_token().ln),
                     asts.NumericLiteral("NumericLiteral", 1.0),
                 ),
@@ -314,7 +314,7 @@ class Parser:
                 left,
                 asts.BinaryExpr(
                     "BinExpr",
-                    self.__parse_primary(left.symbol.symbol),
+                    self.__parse_primary(left.symbol),
                     Token(TokenType.BinOp, "+", self.__cur_token().ln),
                     self.__parse_expr(),
                 ),
@@ -327,7 +327,7 @@ class Parser:
                 left,
                 asts.BinaryExpr(
                     "BinExpr",
-                    self.__parse_primary(left.symbol.symbol),
+                    self.__parse_primary(left.symbol),
                     Token(TokenType.BinOp, "-", self.__cur_token().ln),
                     self.__parse_expr(),
                 ),
@@ -340,7 +340,7 @@ class Parser:
                 left.symbol,
                 asts.BinaryExpr(
                     "BinExpr",
-                    self.__parse_primary(left.symbol.symbol),
+                    self.__parse_primary(left.symbol),
                     Token(TokenType.BinOp, "/", self.__cur_token().ln),
                     self.__parse_expr(),
                 ),

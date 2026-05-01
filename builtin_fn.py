@@ -97,6 +97,10 @@ def return_string(arg: RuntimeValue):
         result += arg.value  # type: ignore
         result += '"'
         return result
+    elif arg.type == "function":
+        return "<Function>"
+    elif arg.type == "nativefn":
+        return "<Native Function>"
     elif arg.type == "map":
         result = "{"
 

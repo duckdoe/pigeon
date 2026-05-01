@@ -39,7 +39,7 @@ def run_program():
     env.declare_var("to_boolean", NativeFn("nativefn", to_booleanfn), True)
     try:
         _, file = sys.argv
-
+        
         ext = file.split('.')
         if ext[-1] != 'pg':
             print("Usage python pigeon.py [script].pg")
